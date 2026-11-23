@@ -18,6 +18,7 @@
   --stroke-map: #ffffff;
   --hatch: #9aa3ab;
   --hilite: #0b0b0b;
+  --fuera: #e4e6e3;
   --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -27,13 +28,13 @@
   :root:not([data-theme="light"]) {
     --bg: #121416; --surface: #1a1c1e; --ink: #eef0f1; --ink-2: #b9c0c6; --ink-3: #8c949b;
     --rule: #2d3236; --accent: #7fb0ea; --accent-soft: #1e2b3b; --stroke-map: #121416;
-    --hatch: #5b636a; --hilite: #ffffff; color-scheme: dark;
+    --hatch: #5b636a; --hilite: #ffffff; --fuera: #24282b; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #121416; --surface: #1a1c1e; --ink: #eef0f1; --ink-2: #b9c0c6; --ink-3: #8c949b;
   --rule: #2d3236; --accent: #7fb0ea; --accent-soft: #1e2b3b; --stroke-map: #121416;
-  --hatch: #5b636a; --hilite: #ffffff; color-scheme: dark;
+  --hatch: #5b636a; --hilite: #ffffff; --fuera: #24282b; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -84,8 +85,29 @@ path.overlay { fill: url(#dots); pointer-events: none; }
 path.micro { stroke: var(--stroke-map); stroke-width: 0.6; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill 380ms ease; }
 path.micro.interp { fill-opacity: 0.55; }
 path.micro.hi { stroke: var(--hilite); stroke-width: 2; }
-path.micro.sel { stroke: var(--accent); stroke-width: 3; }
+path.micro.sel { stroke: var(--hilite); stroke-width: 3.5; filter: drop-shadow(0 0 4px var(--accent)); }
 .modo-micro path.comuna { fill: none !important; stroke: var(--ink-2); stroke-width: 1.4; pointer-events: none; }
+.modo-micro.con-foco path.comuna.fuera { fill: var(--fuera) !important; fill-opacity: 0.9; stroke: var(--surface); stroke-width: 1; pointer-events: auto; cursor: zoom-in; }
+.modo-micro.con-foco path.comuna.fuera:hover { fill-opacity: 0.6; }
+.modo-micro.con-foco path.comuna.foco { stroke: var(--ink); stroke-width: 2.2; }
+path.comuna:focus, path.micro:focus { outline: none; }
+path.comuna:focus-visible, path.micro:focus-visible { stroke: var(--accent); stroke-width: 3; }
+text.mlab { font-family: var(--font-mono); fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-linejoin: round; pointer-events: none; text-anchor: middle; }
+.migas { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 52px 8px 4px; font-size: 0.9rem; color: var(--ink-2); }
+.migas strong { color: var(--ink); font-family: var(--font-display); }
+.aviso { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 6px 10px; font-size: 0.84rem; color: var(--ink-2); border-radius: 0 var(--radius) var(--radius) 0; }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cards h3 { margin-bottom: 4px; }
+.card { display: grid; grid-template-columns: 14px 1fr auto; gap: 2px 8px; align-items: center; width: 100%; padding: 6px 8px; margin-bottom: 4px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface); color: var(--ink); font: inherit; font-size: 0.82rem; text-align: left; cursor: pointer; }
+.card:hover, .card:focus-visible { border-color: var(--accent); outline: none; }
+.card .sw { width: 14px; height: 14px; border-radius: 3px; grid-row: span 2; }
+.card .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.card small { color: var(--ink-3); grid-column: 2 / 4; }
+.dist rect { stroke: none; cursor: pointer; }
+.dist rect.hi { stroke: var(--hilite); stroke-width: 1.5; }
+details > summary { cursor: pointer; font-family: var(--font-display); font-weight: 650; }
+details[open] > summary { margin-bottom: 10px; }
+details .ficha-in { display: grid; gap: 12px; }
 .modo-micro path.overlay { display: none; }
 .seg button:disabled { opacity: 0.4; cursor: not-allowed; }
 .badge { display: inline-block; font-size: 0.72rem; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--ink-2); }
@@ -149,7 +171,7 @@ table.rank tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
   <header>
     <span class="eyebrow">Gran Santiago · 34 comunas · datos SII 2010–2026</span>
     <h1>Atlas del avalúo santiaguino</h1>
-    <p class="lede">Qué tan expuesta está cada comuna al reavalúo 2027, dónde el avalúo pesa más frente al precio y cómo se movió el mercado. Solo cifras agregadas por comuna, a partir de 1,5 millones de ventas y 3,4 millones de roles.</p>
+    <p class="lede">Qué tan expuesta está cada comuna al reavalúo 2027, dónde el avalúo pesa más frente al precio y cómo se movió el mercado. Haz clic en una comuna para ver sus microbarrios. Solo cifras agregadas por comuna y microbarrio, a partir de 1,5 millones de ventas y 3,4 millones de roles.</p>
   </header>
 
   <div class="controls" role="group" aria-label="Controles del mapa">
@@ -157,6 +179,7 @@ table.rank tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
     <div class="ctl"><span class="lbl" id="lbl-capa">Capa</span><div class="seg" id="capa" aria-labelledby="lbl-capa"></div></div>
     <div class="ctl" id="ctl-esc"><span class="lbl" id="lbl-esc">Escenario 2027</span><div class="seg" id="esc" aria-labelledby="lbl-esc"></div></div>
     <div class="ctl"><label for="metrica">Indicador</label><select id="metrica"></select></div>
+    <div class="ctl" id="ctl-rel"><span class="lbl" id="lbl-rel">Mostrar</span><div class="seg" id="rel" aria-labelledby="lbl-rel"></div></div>
     <div class="ctl"><span class="lbl" id="lbl-escala">Escala de color</span><div class="seg" id="escala" aria-labelledby="lbl-escala"></div></div>
     <div class="ctl"><label for="buscar">Buscar comuna</label><input type="search" id="buscar" list="lista-comunas" placeholder="Ej.: Ñuñoa" autocomplete="off"><datalist id="lista-comunas"></datalist></div>
   </div>
@@ -164,14 +187,15 @@ table.rank tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
   <div class="main">
     <div class="panel mapbox">
       <p class="layer-note" id="nota-capa"></p>
-      <p class="hint" style="margin:0 4px 6px">Arrastra para mover · Ctrl + rueda o botones para acercar · doble clic en una comuna para encuadrarla</p>
+      <div class="migas" id="migas" hidden></div>
+      <p class="hint" style="margin:0 4px 6px">Clic en una comuna: zoom a sus microbarrios · Mayús+clic: ficha y comparación sin zoom · Esc: volver · Arrastra para mover · Ctrl + rueda para acercar</p>
       <svg id="mapa" viewBox="0 0 620 660" role="img" aria-labelledby="mapa-titulo">
         <title id="mapa-titulo">Mapa coroplético de las comunas del Gran Santiago</title>
         <defs>
           <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="var(--surface)"></rect><line x1="0" y1="0" x2="0" y2="7" stroke="var(--hatch)" stroke-width="2"></line></pattern>
           <pattern id="dots" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.1" fill="var(--ink)" fill-opacity="0.55"></circle></pattern>
         </defs>
-        <g id="vista"><g id="capa-micro"></g><g id="capa-comunas"></g><g id="capa-overlay"></g><g id="capa-labels"></g></g>
+        <g id="vista"><g id="capa-micro"></g><g id="capa-comunas"></g><g id="capa-overlay"></g><g id="capa-labels"></g><g id="capa-mlabels"></g></g>
       </svg>
       <div class="zoombar"><button class="btn" id="zin" aria-label="Acercar">+</button><button class="btn" id="zout" aria-label="Alejar">−</button><button class="btn" id="zreset" aria-label="Ver todo el Gran Santiago" title="Ver todo">⤢</button></div>
       <div class="legend" id="leyenda"></div>
@@ -193,12 +217,13 @@ table.rank tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
     <span class="eyebrow">Metodología y límites</span>
     <h2 id="t-meth">Cómo leer este atlas</h2>
     <ul>
-      <li><strong>No es un mapa de oportunidades de compra.</strong> Se probó si la brecha precio/avalúo predice la plusvalía de un barrio: en 3 comunas piloto pareció que sí, pero la réplica en las otras 33 no lo confirmó (efecto 4 veces menor y no significativo). Tampoco el alza de contribuciones de 2022 aumentó las ventas.</li>
+      <li><strong>Las lentes de oportunidad muestran posición relativa, no pronósticos.</strong> Cada lente ordena los microbarrios dentro de su comuna (percentil 0–100). Se probó si la brecha precio/avalúo predice la plusvalía de un barrio: en 3 comunas piloto pareció que sí, pero la réplica en las otras 33 no lo confirmó (efecto 4 veces menor y no significativo). Tampoco el alza de contribuciones de 2022 aumentó las ventas.</li>
       <li><strong>Reavalúo 2027:</strong> escenarios, no pronóstico. El SII decide cuánto sube el avalúo; en 2022 lo subió 28% real y cerró la brecha. Desde entonces la brecha está plana (~1,7). S0 supone que el SII mantiene la razón de 2022 (+1%), S1 que repite el cierre de 2022 (+26%) y S2 un punto medio. El exento sube con el avalúo y las tasas bajan para que la recaudación no crezca más de 10%. Montos en pesos del 2º semestre de 2026.</li>
       <li><strong>Potencial de reclamo:</strong> el avalúo del SII es regresivo (PRD 1,10–1,32; el estándar internacional IAAO es 0,98–1,03). Las viviendas más baratas quedan tasadas más cerca de su precio. Un PRD alto y una razón avalúo/precio alta sugieren dónde un reclamo de avalúo tiene más base.</li>
       <li><strong>Mercado:</strong> índice SPAR (precio ÷ avalúo fijo de referencia) de ventas de segunda mano. La trama de puntos marca retornos que no se distinguen de cero con el intervalo de confianza de 95%.</li>
       <li><strong>Datos:</strong> transferencias F2890 y detalle catastral del SII, con UF del SII. Las comunas SII Santiago Centro, Oeste y Sur se muestran juntas como Santiago. Los indicadores con menos de 30 ventas no se muestran (trama gris). No hay datos por propiedad en esta página.</li>
-      <li><strong>Pendiente:</strong> el zoom dentro de cada comuna espera la cartografía de manzanas del SII, que se pedirá por Ley de Transparencia. Mientras tanto, la ficha muestra los microbarrios (grupos de manzanas consecutivas con valor de suelo similar) como franja y ranking, identificados por sus números de manzana SII.</li>
+      <li><strong>Microbarrios:</strong> grupos de manzanas SII consecutivas con valor de suelo similar. Sus polígonos son APROXIMADOS: celdas de Voronoi en torno a unas 3 direcciones geocodificadas por microbarrio (OpenStreetMap), recortadas a la comuna; los semitransparentes tienen ubicación interpolada. Se reemplazarán por la cartografía de manzanas del SII, que se pedirá por Ley de Transparencia.</li>
+      <li><strong>Escala de color:</strong> por defecto, cuantiles: cada color reúne la misma cantidad de unidades visibles (o de la comuna en foco), para que las diferencias se vean aunque los valores estén concentrados. Si 40% o más comparten un mismo valor (por ejemplo 0%), esos van en gris y los cuantiles se calculan con el resto.</li>
     </ul>
     <p class="hint">Fuente del análisis y pre-registro: repositorio r2flows/reavaluo-shock-propiedades. Límites comunales: paquete chilemapas.</p>
   </section>
@@ -218,10 +243,10 @@ const CAPAS = {
   reavaluo: { nombre: "Reavalúo 2027", escenario: true,
     nota: "Proyección por escenario. El SII decide el nivel del alza; dentro de cada comuna se supone uniforme.",
     metricas: [
-      { k: "r27_{E}_pct_alza_200k", t: "% viviendas con alza > $200 mil/año", f: nf.pct, div: false, micro: true },
+      { k: "r27_{E}_pct_alza_200k", t: "% viviendas con alza > $200 mil/año", f: nf.pct, div: false, micro: true, relPp: true },
       { k: "r27_{E}_alza_avaluo_pct", t: "Alza mediana del avalúo", f: nf.pct, div: false },
       { k: "r27_{E}_pasan_a_pagar", t: "Viviendas que pasan a pagar", f: nf.int, div: false },
-      { k: "r27_{E}_alza_anual_mediana", t: "Alza anual mediana (las que suben)", f: nf.clp, div: false, micro: true },
+      { k: "r27_{E}_alza_anual_mediana", t: "Alza anual mediana (las que suben)", f: nf.clp, div: false, micro: true, log: true },
     ] },
   reclamo: { nombre: "Potencial de reclamo", escenario: false,
     nota: "Ventas de segunda mano 2024–2026. Avalúo/precio alto y PRD alto indican avalúos relativamente más pesados.",
@@ -235,39 +260,70 @@ const CAPAS = {
     nota: "Precio de venta ÷ avalúo fiscal. El reavalúo 2022 la bajó de 2,2 a 1,7; un aumento desde entonces anticipa más alza en 2027.",
     metricas: [
       { k: "bre_nivel_2426", t: "Precio/avalúo mediano 2024–2026", f: nf.r2, div: false, micro: true },
-      { k: "bre_cambio_pct", t: "Cambio desde 2022–2023", f: nf.pp, div: true },
+      { k: "bre_cambio_pct", t: "Cambio desde 2022–2023", f: nf.pp, div: true, micro: true, relPp: true },
     ] },
   mercado: { nombre: "Mercado", escenario: false,
     nota: "Índice SPAR de segunda mano. La trama de puntos marca retornos no distinguibles de cero (IC 95%).",
     metricas: [
       { k: "mer_ret_22_25_pct", t: "Retorno 2022 → 2025 (UF)", f: nf.pp, div: true, ic: "mer_ret_ic95_pp" },
-      { k: "mer_uf_m2", t: "UF por m² construido (mediana 2024–26)", f: nf.uf, div: false },
+      { k: "mer_uf_m2", kMicro: "uf_m2_mediano_2426", t: "UF por m² construido (mediana 2024–26)", f: nf.uf, div: false, micro: true, log: true },
     ] },
   contribuciones: { nombre: "Contribuciones hoy", escenario: false,
     nota: "Situación del 2º semestre de 2026, viviendas.",
     metricas: [
       { k: "con_pct_exentas", t: "% viviendas exentas", f: nf.pct, div: false },
-      { k: "con_anual_mediana_afectas", t: "Contribución anual mediana (afectas)", f: nf.clp, div: false },
+      { k: "con_anual_mediana_afectas", t: "Contribución anual mediana (afectas)", f: nf.clp, div: false, log: true },
     ] },
+  oportunidades: { nombre: "Oportunidades", escenario: true, soloMicro: true,
+    nota: "Lentes por microbarrio: posición relativa dentro de su comuna (percentil 0–100), no pronóstico de plusvalía.",
+    metricas: [
+      { k: "lente_comprador", t: "Lente comprador: precio bajo frente al avalúo y poca alza 2027", f: v => es.format(".0f")(v) + "/100", lente: "comprador", micro: true, soloMicro: true },
+      { k: "lente_reclamo", t: "Lente propietario: potencial de reclamo de avalúo", f: v => es.format(".0f")(v) + "/100", lente: "reclamo", micro: true, soloMicro: true },
+      { k: "lente_riesgo", t: "Lente riesgo 2027: dónde golpea más el alza", f: v => es.format(".0f")(v) + "/100", lente: "riesgo", micro: true, soloMicro: true },
+    ] },
+};
+// Lentes: cada componente es el percentil del microbarrio dentro de su comuna; dir −1 invierte (más bajo = mejor).
+const LENTES = {
+  comprador: { rampa: "verde", alto: "Más favorables", bajo: "Menos favorables",
+    texto: "Alto = dentro de su comuna, el precio por cada peso de avalúo y por m² es bajo y el alza de contribuciones 2027 es menor. Útil para buscar dónde mirar; no predice plusvalía (la brecha no la predijo en la réplica R1).",
+    comps: E => [["bre_nivel_2426", -1, "Precio/avalúo bajo", nf.r2], ["uf_m2_mediano_2426", -1, "UF/m² bajo", nf.uf], [`r27_${E}_alza_anual_mediana`, -1, "Alza 2027 baja", nf.clp]] },
+  reclamo: { rampa: "naranja", alto: "Más base para reclamar", bajo: "Menos base",
+    texto: "Alto = el avalúo fiscal pesa más frente al precio de venta que en el resto de la comuna: más base para un reclamo de avalúo ante el SII.",
+    comps: E => [["rec_aval_precio_mediano", 1, "Avalúo/precio alto", nf.r2]] },
+  riesgo: { rampa: "rojo", alto: "Más expuestos", bajo: "Menos expuestos",
+    texto: "Alto = el alza de contribuciones del escenario elegido golpea más que en el resto de la comuna (monto mediano y % de viviendas con alza > $200 mil/año).",
+    comps: E => [[`r27_${E}_alza_anual_mediana`, 1, "Alza anual mediana", nf.clp], [`r27_${E}_pct_alza_200k`, 1, "% con alza > $200 mil", nf.pct]] },
 };
 const ESCS = [["s0", "S0 · +1%"], ["s2", "S2 · medio"], ["s1", "S1 · +26%"]];
 
-const st = { unidad: "comuna", capa: "reavaluo", esc: "s1", m: 0, escala: "vista", sel: null, cmp: null, selMicro: null, sortKey: "valor", sortDir: -1, t: d3.zoomIdentity };
+const st = { unidad: "comuna", capa: "reavaluo", esc: "s1", m: 0, escala: "cuant", rel: false, foco: null, sel: null, cmp: null, selMicro: null, sortKey: "valor", sortDir: -1, t: d3.zoomIdentity };
 let MGEO = null; // geometría aproximada de microbarrios
 const byMicro = new Map(); // id → fila de indicadores
-const metricasDe = capa => CAPAS[capa].metricas.map((m, i) => ({ m, i })).filter(x => st.unidad === "comuna" || x.m.micro);
+const metricasDe = capa => CAPAS[capa].metricas.map((m, i) => ({ m, i })).filter(x => (st.unidad === "comuna" ? !x.m.soloMicro : x.m.micro));
 const byCut = new Map(DATA.comunas.map(c => [c.cut, c]));
 
-// ---- Color: rampas por tema (secuencial azul; divergente azul–gris–rojo) ----
+// ---- Color: rampas por tema (ColorBrewer: amplio rango de luminosidad; en oscuro se invierten) ----
 function oscuro() {
   const t = document.documentElement.getAttribute("data-theme");
   if (t === "dark") return true; if (t === "light") return false;
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 const RAMPAS = {
-  light: { seq: ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"], div: ["#184f95", "#6da7ec", "#f0efec", "#ec9a8a", "#b53030"] },
-  dark: { seq: ["#16314f", "#184f95", "#256abf", "#3987e5", "#6da7ec", "#9ec5f4", "#cde2fb"], div: ["#3987e5", "#25486f", "#383835", "#7a3431", "#e66767"] },
+  seq: ["#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58"],   // YlGnBu
+  verde: ["#e5f5e0", "#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#006d2c", "#00441b"],
+  naranja: ["#fee6ce", "#fdd0a2", "#fdae6b", "#fd8d3c", "#f16913", "#d94801", "#a63603", "#7f2704"],
+  rojo: ["#fee0d2", "#fcbba1", "#fc9272", "#fb6a4a", "#ef3b2c", "#cb181d", "#a50f15", "#67000d"],
+  divLight: ["#2166ac", "#67a9cf", "#d1e5f0", "#f2f2ef", "#fddbc7", "#ef8a62", "#b2182b"],
+  divDark: ["#5aa2e0", "#2f6a97", "#27415a", "#3a3a38", "#6e3530", "#b5523f", "#f08f6c"],
 };
+function rampaSeq(nombre, k) {
+  let arr = RAMPAS[nombre || "seq"];
+  if (oscuro()) arr = arr.slice(1).reverse(); // en oscuro: bajo = oscuro, alto = claro (más saliente sobre fondo oscuro)
+  if (k < 2) return [arr[arr.length - 1]];
+  return d3.quantize(d3.interpolateRgbBasis(arr), k);
+}
+function rampaDiv(k) { return d3.quantize(d3.interpolateRgbBasis(oscuro() ? RAMPAS.divDark : RAMPAS.divLight), k); }
+const NEUTRO = () => (oscuro() ? "#4a4e52" : "#cfd2ce");
 
 // ---- Utilidades ----
 const metrica = () => CAPAS[st.capa].metricas[st.m];
@@ -295,9 +351,9 @@ const pComunas = d3.select("#capa-comunas").selectAll("path").data(feats, f => f
   .attr("aria-label", f => f.properties.nombre)
   .on("mousemove", (ev, f) => mostrarTip(ev, f.properties.cut))
   .on("mouseleave", () => { ocultarTip(); resaltar(null); })
-  .on("click", (ev, f) => seleccionar(f.properties.cut, ev.shiftKey))
-  .on("dblclick", (ev, f) => { ev.stopPropagation(); encuadrar(f.properties.cut); })
-  .on("keydown", (ev, f) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); seleccionar(f.properties.cut, ev.shiftKey); } });
+  .on("click", (ev, f) => (ev.shiftKey && st.unidad === "comuna" ? seleccionar(f.properties.cut, true) : enfocar(f.properties.cut)))
+  .on("dblclick", ev => ev.stopPropagation())
+  .on("keydown", (ev, f) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); ev.shiftKey ? seleccionar(f.properties.cut, true) : enfocar(f.properties.cut); } });
 const pOverlay = d3.select("#capa-overlay").selectAll("path").data(feats, f => f.properties.cut).join("path").attr("class", "overlay").attr("d", path);
 const labs = d3.select("#capa-labels").selectAll("text").data(feats, f => f.properties.cut).join("text")
   .attr("class", "lab").attr("x", f => centro.get(f.properties.cut)[0]).attr("y", f => centro.get(f.properties.cut)[1]).attr("dy", "0.35em")
@@ -305,7 +361,7 @@ const labs = d3.select("#capa-labels").selectAll("text").data(feats, f => f.prop
 
 const zoom = d3.zoom().scaleExtent([0.5, 10]).extent([[0, 0], [W, H]]).translateExtent([[-W, -H], [2 * W, 2 * H]])
   .on("zoom", ev => { st.t = ev.transform; vista.attr("transform", ev.transform); ajustarEtiquetas(); })
-  .on("end", () => { if (st.escala === "vista") pintar(); });
+  .on("end", () => { if (st.escala !== "fija" && !st.foco) pintar(); });
 // La rueda solo hace zoom con Ctrl/Cmd (para no secuestrar el scroll de la página); arrastre y pellizco siempre.
 zoom.filter(ev => (ev.type === "wheel" ? ev.ctrlKey || ev.metaKey : !ev.button));
 svg.call(zoom).on("dblclick.zoom", null);
@@ -314,7 +370,13 @@ d3.select("#zout").on("click", () => svg.transition().duration(300).call(zoom.sc
 d3.select("#zreset").on("click", () => svg.transition().duration(450).call(zoom.transform, d3.zoomIdentity));
 
 function encuadrar(cut) {
-  const [[x0, y0], [x1, y1]] = bounds.get(cut);
+  // En modo microbarrio se encuadra el área con microbarrios (sin los sectores rurales de la comuna)
+  let bb = bounds.get(cut);
+  if (st.unidad === "micro" && MGEO) {
+    const fs = MGEO.features.filter(f => f.properties.cut === cut).map(f => path.bounds(f));
+    if (fs.length) bb = [[d3.min(fs, b => b[0][0]), d3.min(fs, b => b[0][1])], [d3.max(fs, b => b[1][0]), d3.max(fs, b => b[1][1])]];
+  }
+  const [[x0, y0], [x1, y1]] = bb;
   const k = Math.min(8, 0.8 / Math.max((x1 - x0) / W, (y1 - y0) / H));
   const t = d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
   svg.transition().duration(600).call(zoom.transform, t);
@@ -322,9 +384,36 @@ function encuadrar(cut) {
 function ajustarEtiquetas() {
   const k = st.t.k;
   labs.attr("font-size", 11 / k)
-    .attr("display", f => (areaPx.get(f.properties.cut) * k * k > 2600 ? null : "none"))
+    .attr("display", f => (f.properties.cut !== st.foco && areaPx.get(f.properties.cut) * k * k > 2600 ? null : "none"))
     .style("stroke-width", 3 / k + "px");
+  // Rango de manzanas sobre cada microbarrio de la comuna en foco, solo si cabe en pantalla
+  d3.selectAll("#capa-mlabels text").attr("font-size", 9 / k).style("stroke-width", 2.5 / k + "px")
+    .attr("display", d => (st.foco && d.cut === st.foco && k >= 3 && d.area * k * k > 2200 ? null : "none"));
 }
+const relActivo = () => st.rel && st.unidad === "micro" && !metrica().lente;
+function enfocar(cut) {
+  st.foco = cut; st.sel = cut; st.cmp = null; st.selMicro = null; st.unidad = "micro";
+  asegurarMetricaMicro(true);
+  st.sortKey = "valor"; st.sortDir = -1;
+  controles(); pintar(); encuadrar(cut);
+}
+function salir() {
+  st.foco = null; st.selMicro = null; st.sel = null; st.cmp = null; st.unidad = "comuna";
+  if (CAPAS[st.capa].soloMicro) { st.capa = "reavaluo"; st.m = 0; }
+  st.sortKey = "valor"; st.sortDir = -1;
+  controles(); pintar();
+  svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+}
+function asegurarMetricaMicro(preferirSensible) {
+  // En microbarrios, "% con alza > $200 mil" es 0 en más de la mitad: por defecto se usa el alza anual mediana
+  if (st.capa === "reavaluo" && (st.m === 0 && preferirSensible || !metrica().micro)) { st.m = 3; return; }
+  if (metrica().micro) return;
+  const x = metricasDe(st.capa)[0]; if (x) st.m = x.i; else { st.capa = "oportunidades"; st.m = 0; }
+}
+document.addEventListener("keydown", ev => {
+  if (ev.key !== "Escape" || ev.target.matches("input, select, textarea")) return;
+  if (st.selMicro) { st.selMicro = null; pintar(); } else if (st.foco) salir();
+});
 function visibles() {
   if (st.unidad === "micro") return microVisibles();
   if (st.escala === "fija") return DATA.comunas;
@@ -335,55 +424,111 @@ function visibles() {
     return x1 > 0 && x0 < W && y1 > 0 && y0 < H;
   });
 }
-let escalaColor = null, dominio = null, nVis = 0;
+// escala: { tipo: "cuant" | "umbral" | "cont" | "vacio", color(v), cortes, dominio, log, empate: {v, n}, sinVariacion }
+let escala = { tipo: "vacio", color: () => NEUTRO() }, nVis = 0;
+const colorDe = v => (v == null || !isFinite(v) ? "url(#hatch)" : escala.color(v));
+const fval = () => (st.unidad === "micro" ? valorMicro : valor);
 function construirEscala() {
-  const m = metrica(), vis = visibles();
-  const fval = st.unidad === "micro" ? valorMicro : valor;
-  const vals = vis.map(fval).filter(v => v != null && isFinite(v)).sort(d3.ascending);
+  const m = metrica(), vis = visibles(), f = fval();
   nVis = vis.length;
-  const all = (st.unidad === "micro" ? microDatos() : DATA.comunas).map(fval).filter(v => v != null).sort(d3.ascending);
-  if (!all.length) { dominio = [0, 1]; escalaColor = d3.scaleSequential(d3.interpolateRgbBasis((oscuro() ? RAMPAS.dark : RAMPAS.light).seq)).domain(dominio); return; }
-  const base = vals.length >= 3 ? vals : all;
-  let lo = d3.quantileSorted(base, 0.05), hi = d3.quantileSorted(base, 0.95);
-  if (lo === hi) { lo -= 1; hi += 1; }
-  const R = oscuro() ? RAMPAS.dark : RAMPAS.light;
-  if (m.div) {
-    const a = Math.max(Math.abs(lo), Math.abs(hi)) || 1;
-    dominio = [-a, a];
-    escalaColor = d3.scaleSequential(d3.interpolateRgbBasis(R.div)).domain(dominio).clamp(true);
-  } else {
-    dominio = [lo, hi];
-    escalaColor = d3.scaleSequential(d3.interpolateRgbBasis(R.seq)).domain(dominio).clamp(true);
+  const universo = st.unidad === "micro" ? microDatos() : DATA.comunas;
+  const pool = st.escala === "fija" && !st.foco ? universo : vis;
+  let vals = pool.map(f).filter(v => v != null && isFinite(v)).sort(d3.ascending);
+  if (vals.length < 3) vals = universo.map(f).filter(v => v != null && isFinite(v)).sort(d3.ascending);
+  const n = st.unidad === "micro" ? 7 : 5;
+  escala = { tipo: "vacio", color: () => NEUTRO(), empate: null, sinVariacion: false };
+  if (!vals.length) return;
+  if (m.lente) {  // puntaje 0–100 ya relativo a la comuna: cortes fijos
+    const cortes = d3.range(1, n).map(i => (i * 100) / n);
+    escala = { tipo: "umbral", color: d3.scaleThreshold().domain(cortes).range(rampaSeq(LENTES[m.lente].rampa, n)), cortes: [0, ...cortes, 100] };
+    return;
   }
+  if (m.div || relActivo()) {  // divergente simétrica en torno a 0
+    const abs = vals.map(Math.abs).sort(d3.ascending);
+    const a = d3.quantileSorted(abs, 0.9) || abs[abs.length - 1] || 1;
+    const cortes = d3.range(1, n).map(i => -a + (i * 2 * a) / n);
+    escala = { tipo: "umbral", color: d3.scaleThreshold().domain(cortes).range(rampaDiv(n)), cortes: [-a, ...cortes, a] };
+    return;
+  }
+  // Empates: si ≥ 40% comparte un valor (p. ej. 0%), va en gris y los cuantiles usan el resto
+  const [modo, cuenta] = d3.rollups(vals, v => v.length, v => v).sort((x, y) => y[1] - x[1])[0];
+  let resto = vals, empate = null;
+  if (cuenta / vals.length >= 0.4) { empate = { v: modo, n: cuenta }; resto = vals.filter(v => v !== modo); }
+  if (!resto.length) { escala = { tipo: "vacio", color: () => NEUTRO(), empate, sinVariacion: true }; return; }
+  let base;
+  if (st.escala === "cont") {
+    let lo = d3.quantileSorted(resto, 0.02), hi = d3.quantileSorted(resto, 0.98);
+    if (lo === hi) { lo = resto[0]; hi = resto[resto.length - 1]; }
+    if (lo === hi) { lo -= 1; hi += 1; }
+    const log = m.log && lo > 0;
+    base = (log ? d3.scaleSequentialLog() : d3.scaleSequential()).domain([lo, hi]).interpolator(d3.interpolateRgbBasis(rampaSeq(null, 9))).clamp(true);
+    escala = { tipo: "cont", dominio: [lo, hi], log };
+  } else {
+    const k = Math.min(n, new Set(resto).size);
+    base = d3.scaleQuantile().domain(resto).range(rampaSeq(null, k));
+    escala = { tipo: "cuant", cortes: [resto[0], ...base.quantiles(), resto[resto.length - 1]] };
+  }
+  escala.empate = empate;
+  escala.color = v => (empate && v === empate.v ? NEUTRO() : base(v));
+  escala.base = base;
 }
 function pintar() {
-  d3.select("#mapa").classed("modo-micro", st.unidad === "micro");
+  const micro = st.unidad === "micro";
+  d3.select("#mapa").classed("modo-micro", micro).classed("con-foco", micro && !!st.foco);
   construirEscala();
   pintarMicro();
-  pComunas.attr("fill", f => { const v = valor(byCut.get(f.properties.cut)); return v == null ? "url(#hatch)" : escalaColor(v); })
-    .classed("sel", f => f.properties.cut === st.sel).classed("cmp", f => f.properties.cut === st.cmp);
+  pComunas.attr("fill", f => colorDe(valor(byCut.get(f.properties.cut))))
+    .classed("sel", f => !micro && f.properties.cut === st.sel).classed("cmp", f => !micro && f.properties.cut === st.cmp)
+    .classed("fuera", f => !!st.foco && f.properties.cut !== st.foco).classed("foco", f => f.properties.cut === st.foco);
   pOverlay.attr("display", f => (noSig(byCut.get(f.properties.cut)) ? null : "none"));
-  leyenda(); ranking(); ficha(); hash();
+  migas(); ajustarEtiquetas(); leyenda(); ranking(); ficha(); hash();
 }
+function migas() {
+  const el = d3.select("#migas");
+  if (!st.foco) { el.attr("hidden", true).html(""); return; }
+  el.attr("hidden", null).html("");
+  el.append("button").attr("class", "btn").text("← Gran Santiago").on("click", salir);
+  el.append("span").html(`Gran Santiago › <strong>${byCut.get(st.foco).nombre}</strong> · ${microDatos().filter(r => r.cut === st.foco).length} microbarrios · clic en otra comuna gris para saltar a ella`);
+}
+function fmtV(v) {
+  const m = metrica();
+  if (v == null) return "sin datos suficientes";
+  if (relActivo()) return (v > 0 ? "+" : "") + es.format(".1f")(v) + (m.relPp ? " pp" : "%") + " vs mediana comunal";
+  return m.f(v);
+}
+const fmtCorte = v => { const m = metrica(); if (m.lente) return es.format(".0f")(v); return relActivo() ? (v > 0 ? "+" : "") + es.format(".0f")(v) + (m.relPp ? " pp" : "%") : m.f(v); };
 function leyenda() {
   const m = metrica(), el = d3.select("#leyenda"); el.html("");
-  const lw = 300, lh = 12;
   const meta = el.append("div").attr("class", "meta");
-  meta.append("span").html(`<strong>${m.t}</strong>`);
-  const unidadTxt = st.unidad === "micro" ? "microbarrios" : "comunas";
-  meta.append("span").text(st.escala === "vista" ? `Escala ajustada a ${nVis} ${unidadTxt} visibles` : "Escala fija: todo el Gran Santiago");
-  const s = el.append("svg").attr("viewBox", `0 0 ${lw + 20} 34`).attr("width", "100%").style("max-width", "420px");
-  const gid = "grad-ley";
-  const grad = s.append("defs").append("linearGradient").attr("id", gid);
-  d3.range(0, 1.0001, 0.1).forEach(p => grad.append("stop").attr("offset", p).attr("stop-color", escalaColor(dominio[0] + p * (dominio[1] - dominio[0]))));
-  s.append("rect").attr("x", 10).attr("y", 2).attr("width", lw).attr("height", lh).attr("rx", 2).attr("fill", `url(#${gid})`);
-  const x = d3.scaleLinear().domain(dominio).range([10, 10 + lw]);
-  x.ticks(4).forEach(t => { s.append("line").attr("x1", x(t)).attr("x2", x(t)).attr("y1", 2 + lh).attr("y2", 18).attr("stroke", "var(--ink-3)"); s.append("text").attr("x", x(t)).attr("y", 30).attr("text-anchor", "middle").text(m.f(t)); });
+  meta.append("span").html(`<strong>${m.t}${relActivo() ? " · frente a la mediana de su comuna" : ""}</strong>`);
+  const u = st.unidad === "micro" ? "microbarrios" : "comunas";
+  const ambito = st.foco ? `${nVis} microbarrios de ${byCut.get(st.foco).nombre}` : st.escala === "fija" ? `todo el Gran Santiago` : `${nVis} ${u} visibles`;
+  meta.append("span").text(m.lente ? "Percentil dentro de su comuna (0–100)" : escala.tipo === "cuant" ? `Cuantiles: cada color reúne la misma cantidad · ${ambito}` : escala.tipo === "cont" ? `Escala continua${escala.log ? " logarítmica" : ""} · ${ambito}` : escala.tipo === "umbral" ? `Divergente en torno a 0 · ${ambito}` : "");
+  if (escala.sinVariacion) {
+    const av = el.append("div").attr("class", "aviso").html(`Todos los ${u} a la vista tienen el mismo valor (${m.f(escala.empate.v)}): este indicador no distingue aquí. `);
+    if (st.capa === "reavaluo") av.append("button").attr("class", "btn").text("Cambiar a: alza anual mediana").on("click", () => { st.m = 3; controles(); pintar(); });
+    else av.append("button").attr("class", "btn").text("Ver lente comprador").on("click", () => { st.capa = "oportunidades"; st.m = 0; if (st.unidad !== "micro") st.unidad = "micro"; controles(); pintar(); });
+  }
+  const lw = 300, lh = 12;
+  const s = el.append("svg").attr("viewBox", `0 0 ${lw + 30} 36`).attr("width", "100%").style("max-width", "440px");
+  if (escala.tipo === "cont") {
+    const grad = s.append("defs").append("linearGradient").attr("id", "grad-ley");
+    const x = (escala.log ? d3.scaleLog() : d3.scaleLinear()).domain(escala.dominio).range([15, 15 + lw]);
+    d3.range(0, 1.0001, 0.1).forEach(p => grad.append("stop").attr("offset", p).attr("stop-color", escala.base(x.invert(15 + p * lw))));
+    s.append("rect").attr("x", 15).attr("y", 2).attr("width", lw).attr("height", lh).attr("rx", 2).attr("fill", "url(#grad-ley)");
+    x.ticks(4).slice(0, 5).forEach(t => { s.append("line").attr("x1", x(t)).attr("x2", x(t)).attr("y1", 2 + lh).attr("y2", 18).attr("stroke", "var(--ink-3)"); s.append("text").attr("x", x(t)).attr("y", 31).attr("text-anchor", "middle").text(fmtCorte(t)); });
+  } else if (escala.cortes) {
+    const c = escala.cortes, k = c.length - 1, bw = lw / k;
+    for (let i = 0; i < k; i++) s.append("rect").attr("x", 15 + i * bw).attr("y", 2).attr("width", bw - 2).attr("height", lh).attr("rx", 2).attr("fill", escala.tipo === "umbral" ? escala.color((c[i] + c[i + 1]) / 2) : escala.base.range()[i]);
+    const paso = k > 5 ? 2 : 1;
+    c.forEach((v, i) => { if ((i % paso && i !== k) || (paso > 1 && i === k - 1)) return; s.append("text").attr("x", 15 + i * bw - (i === k ? 2 : 0)).attr("y", 31).attr("text-anchor", i === 0 ? "start" : i === k ? "end" : "middle").text(fmtCorte(v)); });
+  }
   const keys = el.append("div").attr("class", "keys");
+  if (escala.empate && !escala.sinVariacion) keys.append("span").html(`<span class="swatch" style="background:${NEUTRO()}"></span>= ${m.f(escala.empate.v)}: ${escala.empate.n} ${u} (empatados)`);
   keys.append("span").html('<span class="swatch" style="background:var(--surface);background-image:repeating-linear-gradient(45deg,var(--hatch) 0 2px,transparent 2px 6px)"></span>Sin datos suficientes (n &lt; 30)');
   if (st.unidad === "micro") keys.append("span").html('<span class="swatch" style="background:var(--accent);opacity:.5"></span>Semitransparente: ubicación interpolada');
   if (m.ic && st.unidad === "comuna") keys.append("span").html('<span class="swatch" style="background:radial-gradient(var(--ink) 1px,transparent 1.4px) 0 0/5px 5px"></span>No distinguible de 0 (IC 95%)');
-  keys.append("span").text("Valores fuera del rango p5–p95 se muestran en el color extremo");
+  if (escala.tipo === "cont") keys.append("span").text("Valores fuera de p2–p98 se muestran en el color extremo");
 }
 
 // ---- Tooltip ----
@@ -393,7 +538,9 @@ function mostrarTip(ev, cut) {
   const box = document.querySelector(".mapbox").getBoundingClientRect();
   let extra = "";
   if (m.ic && c && c[m.ic] != null) extra = `<br><span class="num">± ${es.format(".1f")(c[m.ic])} pp (IC 95%)</span>`;
-  tip.innerHTML = `<strong>${c.nombre}</strong><br>${m.t}:<br><span class="num">${v == null ? "sin datos suficientes" : m.f(v)}</span>${extra}<br><span style="color:var(--ink-3)">${nf.int(c.viviendas)} viviendas · clic: ficha · Mayús+clic: comparar</span>`;
+  tip.innerHTML = st.foco
+    ? `<strong>${c.nombre}</strong><br><span style="color:var(--ink-3)">clic: ver sus microbarrios</span>`
+    : `<strong>${c.nombre}</strong><br>${m.t}:<br><span class="num">${v == null ? "sin datos suficientes" : m.f(v)}</span>${extra}<br><span style="color:var(--ink-3)">${nf.int(c.viviendas)} viviendas · clic: ver sus microbarrios · Mayús+clic: ficha y comparar</span>`;
   tip.hidden = false;
   const x = Math.min(ev.clientX - box.left + 14, box.width - 250), y = ev.clientY - box.top + 14;
   tip.style.left = Math.max(6, x) + "px"; tip.style.top = y + "px";
@@ -439,20 +586,24 @@ const FICHA = [
 ];
 function ficha() {
   const el = d3.select("#ficha"); el.html("");
-  if (st.unidad === "micro") return fichaMicro(el);
+  if (st.unidad === "micro") return st.foco && !st.selMicro ? fichaFoco(el) : fichaMicro(el);
   if (!st.sel) {
     const top = [...DATA.comunas].filter(c => valor(c) != null).sort((a, b) => valor(b) - valor(a)).slice(0, 3);
     el.append("div").attr("class", "empty").html(`<span class="eyebrow">Ficha comunal</span><h2>Elige una comuna en el mapa</h2>
-      <p>Clic para ver su ficha; Mayús+clic en otra para compararlas. Doble clic acerca el mapa a esa comuna y la escala de color se ajusta a lo que ves.</p>
+      <p><strong>Clic</strong> en una comuna: el mapa se acerca y la pinta por microbarrio, con la escala de color recalculada solo para ella. <strong>Mayús+clic</strong>: ficha comunal sin zoom; Mayús+clic en otra para compararlas.</p>
       <p class="hint">Más altas en “${metrica().t}”: ${top.map(c => `<button class="btn" data-cut="${c.cut}" style="margin:2px 4px 2px 0">${c.nombre}</button>`).join("")}</p>`);
     el.selectAll("button[data-cut]").on("click", function () { seleccionar(this.dataset.cut, false); });
     return;
   }
-  const a = byCut.get(st.sel), b = st.cmp ? byCut.get(st.cmp) : null;
+  fichaComuna(el, false);
+}
+function fichaComuna(el, embebida) {
+  const a = byCut.get(st.sel), b = !embebida && st.cmp ? byCut.get(st.cmp) : null;
+  if (!embebida) {
   const head = el.append("div").attr("class", "head");
   head.append("div").html(`<span class="eyebrow">Ficha comunal${b ? " · comparación" : ""}</span><h2>${a.nombre}${b ? ` <span style="color:var(--ink-3);font-weight:500">vs</span> ${b.nombre}` : ""}</h2><p class="hint">${nf.int(a.viviendas)} viviendas${b ? ` · ${nf.int(b.viviendas)}` : ""} · ${nf.int(a.n_ventas_2426 || 0)} ventas 2024–26</p>`);
   const acc = head.append("div").style("display", "flex").style("gap", "6px");
-  acc.append("button").attr("class", "btn").text("Encuadrar").on("click", () => encuadrar(st.sel));
+  acc.append("button").attr("class", "btn").text("Ver microbarrios").on("click", () => enfocar(st.sel));
   acc.append("button").attr("class", "btn").text("Cerrar").on("click", () => { st.sel = null; st.cmp = null; pintar(); });
 
   if (!b) {
@@ -468,6 +619,7 @@ function ficha() {
   cs.append("option").attr("value", "").text("— ninguna —");
   DATA.comunas.filter(c => c.cut !== st.sel).forEach(c => cs.append("option").attr("value", c.cut).property("selected", c.cut === st.cmp).text(c.nombre));
   cs.on("change", function () { st.cmp = this.value || null; pintar(); });
+  }
   FICHA.forEach(([titulo, filas]) => {
     el.append("h3").text(titulo);
     const t = el.append("table").attr("class", "cmp-table");
@@ -478,7 +630,6 @@ function ficha() {
       tb.append("tr").html(`<td>${lbl}</td><td class="num">${va == null ? "—" : f(va)}</td><td class="num">${b ? (vb == null ? "—" : f(vb)) : rango(k, va)}</td>`);
     });
   });
-  microSeccion(el, a);
   el.append("h3").text("Precio/avalúo mediano por año");
   sparkline(el, DATA.series[a.cut]?.brecha, b ? DATA.series[b.cut]?.brecha : null, v => nf.r2(v), "El reavalúo 2022 corta la serie: los avalúos nuevos bajan la razón.");
   el.append("h3").text("Índice de precios SPAR (2010 = 100, en UF)");
@@ -512,47 +663,49 @@ function sparkline(el, sa, sb, f, nota) {
 // ---- Microbarrios (sin geometría hasta recibir la cartografía de manzanas del SII) ----
 let MICRO = null;
 fetch("data/microbarrios.json").then(r => (r.ok ? r.json() : null)).then(j => { MICRO = j; byMicro.clear(); microDatos(); if (st.unidad === "micro") pintar(); else if (st.sel) ficha(); }).catch(() => {});
-function microMetrica() {
-  const k = metrica().k, E = st.esc.toUpperCase();
-  if (/pct_alza_200k|alza_avaluo_pct|alza_anual_mediana/.test(k)) return { k: k.replace("{E}", E), t: metrica().t, f: metrica().f };
-  if (k === "r27_{E}_pasan_a_pagar") return { k: `r27_${E}_alza_avaluo_pct`, t: "Alza mediana del avalúo 2027", f: nf.pct };
-  if (k.startsWith("rec_")) return { k: "rec_aval_precio_mediano", t: "Avalúo/precio mediano 2024–26", f: nf.r2 };
-  if (k.startsWith("bre_")) return { k: "bre_nivel_2426", t: "Precio/avalúo 2024–26", f: nf.r2 };
-  return { k: `r27_${E}_alza_avaluo_pct`, t: "Alza mediana del avalúo 2027", f: nf.pct };
-}
-function microSeccion(el, a) {
-  el.append("h3").text(`Microbarrios de ${a.nombre}`);
-  if (!MICRO) { el.append("p").attr("class", "hint").text("Cargando microbarrios…"); return; }
-  const filas = (MICRO.comunas[a.cut] || []).map(r => Object.fromEntries(MICRO.campos.map((c, i) => [c, r[i]])));
-  const mm = microMetrica();
-  const vals = filas.map(r => r[mm.k]).filter(v => v != null).sort(d3.ascending);
-  if (vals.length < 2) { el.append("p").attr("class", "hint").text("Sin datos suficientes por microbarrio."); return; }
-  const R = oscuro() ? RAMPAS.dark : RAMPAS.light;
-  let lo = d3.quantileSorted(vals, 0.05), hi = d3.quantileSorted(vals, 0.95); if (lo === hi) { lo -= 1; hi += 1; }
-  const col = d3.scaleSequential(d3.interpolateRgbBasis(R.seq)).domain([lo, hi]).clamp(true);
-  el.append("p").attr("class", "hint").text(`${filas.length} microbarrios ordenados por número de manzana SII (ancho = viviendas). Color: ${mm.t}, escala de esta comuna (${mm.f(lo)} a ${mm.f(hi)}). Sin mapa hasta recibir la cartografía de manzanas del SII.`);
-  const w = 360, h = 26, tot = d3.sum(filas, r => r.viviendas);
-  const s = el.append("svg").attr("class", "strip").attr("viewBox", `0 0 ${w} ${h}`).attr("role", "img").attr("aria-label", `Franja de microbarrios de ${a.nombre}`);
-  let x = 0;
-  filas.forEach(r => {
-    const ww = (w * r.viviendas) / tot, v = r[mm.k];
-    s.append("rect").attr("x", x).attr("y", 0).attr("width", Math.max(ww, 0.6)).attr("height", h).attr("fill", v == null ? "url(#hatch)" : col(v))
-      .append("title").text(`Manzanas ${r.mz_min}–${r.mz_max} · ${nf.int(r.viviendas)} viviendas · ${v == null ? "sin datos" : mm.f(v)}`);
-    x += ww;
-  });
-  const orden = filas.filter(r => r[mm.k] != null).sort((p, q) => q[mm.k] - p[mm.k]);
-  const t = el.append("table").attr("class", "cmp-table");
-  t.append("thead").html(`<tr><th>Microbarrio (manzanas SII)</th><th class="num">Viviendas</th><th class="num">${mm.t}</th></tr>`);
-  const tb = t.append("tbody");
-  const fila = r => tb.append("tr").html(`<td>${r.mz_min}–${r.mz_max}</td><td class="num">${nf.int(r.viviendas)}</td><td class="num">${mm.f(r[mm.k])}</td>`);
-  orden.slice(0, 4).forEach(fila);
-  if (orden.length > 8) tb.append("tr").html('<td colspan="3" class="hint">…</td>');
-  orden.slice(-4).forEach(r => { if (orden.indexOf(r) >= 4) fila(r); });
-  el.append("p").attr("class", "hint").html('Para ubicar un microbarrio, busca sus números de manzana en <a href="https://www4.sii.cl/mapasui/internet/" target="_blank" rel="noopener">SII Mapas</a> (capa Manzanas).');
-}
-
 // ---- Nivel microbarrio en el mapa ----
-const valorMicro = m => (m ? m[clave()] : null);
+const claveMicro = () => (metrica().kMicro || metrica().k).replace("{E}", st.esc.toUpperCase());
+// Sin viviendas con alza, la "alza anual mediana" viene vacía: para las lentes equivale a 0
+const compVal = (r, k) => !r ? null : (r[k] == null && /alza_anual_mediana/.test(k) ? 0 : r[k]);
+const lenteCache = new Map(), medCache = new Map();
+function lente(nombre) {
+  const key = nombre + st.esc;
+  if (lenteCache.has(key)) return lenteCache.get(key);
+  const out = new Map(), comps = LENTES[nombre].comps(st.esc.toUpperCase());
+  if (!MICRO) return out;
+  for (const [, filas] of d3.group(microDatos(), r => r.cut)) {
+    const fns = comps.map(([k, dir]) => {
+      const vals = filas.map(r => compVal(r, k)).filter(v => v != null).sort(d3.ascending);
+      return r => {
+        const v = compVal(r, k); if (v == null || vals.length < 5) return null;
+        const p = ((d3.bisectLeft(vals, v) + d3.bisectRight(vals, v)) / 2 / vals.length) * 100;
+        return dir > 0 ? p : 100 - p;
+      };
+    });
+    filas.forEach(r => { const ps = fns.map(fn => fn(r)); out.set(r.id, { score: ps.some(x => x == null) ? null : d3.mean(ps), comps: ps }); });
+  }
+  lenteCache.set(key, out);
+  return out;
+}
+function medianaComuna(cut) {
+  const k = claveMicro(), key = k + "|" + cut;
+  if (!medCache.has(key)) medCache.set(key, d3.median(microDatos().filter(x => x.cut === cut), x => compVal(x, k)));
+  return medCache.get(key);
+}
+function valorMicroBruto(r) {
+  if (!r) return null;
+  const m = metrica();
+  if (m.lente) { const x = lente(m.lente).get(r.id); return x ? x.score : null; }
+  return compVal(r, claveMicro());
+}
+function valorMicro(r) {
+  const v = valorMicroBruto(r);
+  if (v == null || !relActivo()) return v;
+  const med = medianaComuna(r.cut);
+  if (med == null) return null;
+  return metrica().relPp ? v - med : med === 0 ? null : (v / med - 1) * 100;
+}
+let MLAB = [];
 fetch("data/microbarrios.geojson").then(r => (r.ok ? r.json() : null)).then(g => {
   if (!g) return;
   MGEO = g;
@@ -560,19 +713,25 @@ fetch("data/microbarrios.geojson").then(r => (r.ok ? r.json() : null)).then(g =>
     .attr("class", f => "micro" + (f.properties.ubicacion === "interpolado" ? " interp" : "")).attr("d", path).attr("tabindex", 0)
     .on("mousemove", (ev, f) => tipMicro(ev, f))
     .on("mouseleave", () => { ocultarTip(); resaltarMicro(null); })
-    .on("click", (ev, f) => { st.selMicro = st.selMicro === f.properties.id ? null : f.properties.id; pintar(); })
-    .on("keydown", (ev, f) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); st.selMicro = f.properties.id; pintar(); } });
-  if (st.unidad === "micro") pintar();
+    .on("click", (ev, f) => elegirMicro(st.selMicro === f.properties.id ? null : f.properties.id, false))
+    .on("keydown", (ev, f) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); elegirMicro(f.properties.id, false); } });
+  MLAB = g.features.map(f => { const [x, y] = path.centroid(f); return { id: f.properties.id, cut: f.properties.cut, x, y, area: path.area(f) }; });
+  d3.select("#capa-mlabels").selectAll("text").data(MLAB, d => d.id).join("text").attr("class", "mlab").attr("x", d => d.x).attr("y", d => d.y).attr("dy", "0.35em").attr("display", "none");
+  if (st.unidad === "micro") { pintar(); if (st.foco) encuadrar(st.foco); }
 }).catch(() => {});
 function microDatos() {
   if (!MICRO) return [];
-  if (!byMicro.size) Object.entries(MICRO.comunas).forEach(([cut, filas]) => filas.forEach(r => { const o = Object.fromEntries(MICRO.campos.map((c, i) => [c, r[i]])); o.cut = cut; byMicro.set(o.id, o); }));
+  if (!byMicro.size) {
+    Object.entries(MICRO.comunas).forEach(([cut, filas]) => filas.forEach(r => { const o = Object.fromEntries(MICRO.campos.map((c, i) => [c, r[i]])); o.cut = cut; byMicro.set(o.id, o); }));
+    lenteCache.clear(); medCache.clear();
+  }
   return [...byMicro.values()];
 }
 const mBounds = new Map();
 function microVisibles() {
   if (!MGEO) return [];
-  microDatos();
+  const datos = microDatos();
+  if (st.foco) return datos.filter(r => r.cut === st.foco);
   const t = st.t;
   return MGEO.features.filter(f => {
     if (st.escala === "fija") return true;
@@ -584,28 +743,38 @@ function microVisibles() {
 function pintarMicro() {
   const sel = d3.select("#capa-micro").selectAll("path");
   if (st.unidad !== "micro") { sel.attr("display", "none"); return; }
-  sel.attr("display", null)
-    .attr("fill", f => { const v = valorMicro(byMicro.get(f.properties.id)); return v == null ? "url(#hatch)" : escalaColor(v); })
+  sel.attr("display", f => (st.foco && f.properties.cut !== st.foco ? "none" : null))
+    .attr("fill", f => colorDe(valorMicro(byMicro.get(f.properties.id))))
     .classed("sel", f => f.properties.id === st.selMicro);
+  sel.filter(f => f.properties.id === st.selMicro).raise();
+  d3.selectAll("#capa-mlabels text").text(d => { const r = byMicro.get(d.id); return r ? `${r.mz_min}–${r.mz_max}` : ""; });
+}
+function elegirMicro(id, mover) {
+  st.selMicro = id;
+  let nuevoFoco = false;
+  if (id && !st.foco) { const r = byMicro.get(id); if (r) { st.foco = r.cut; st.sel = r.cut; nuevoFoco = true; } }
+  if (id && mover) encuadrarMicro(id); else if (nuevoFoco) encuadrar(st.foco);
+  pintar();
 }
 function ajustarAMicro() {
-  // Al pasar a microbarrios sin zoom, acerca a la comuna seleccionada (o al centro urbano)
   if (st.t.k > 1.5) return;
-  if (st.sel) encuadrar(st.sel); else svg.transition().duration(500).call(zoom.scaleTo, 2.2);
+  svg.transition().duration(500).call(zoom.scaleTo, 2.2);
 }
 function tipMicro(ev, f) {
   const r = byMicro.get(f.properties.id), m = metrica();
   if (!r) return;
   const c = byCut.get(r.cut), v = valorMicro(r);
   const box = document.querySelector(".mapbox").getBoundingClientRect();
-  tip.innerHTML = `<strong>Manzanas ${r.mz_min}–${r.mz_max}</strong> · ${c ? c.nombre : ""}<br>${m.t}:<br><span class="num">${v == null ? "sin datos suficientes" : m.f(v)}</span><br><span style="color:var(--ink-3)">${nf.int(r.viviendas)} viviendas · ubicación ${f.properties.ubicacion}</span>`;
+  tip.innerHTML = `<strong>Manzanas ${r.mz_min}–${r.mz_max}</strong> · ${c ? c.nombre : ""}<br>${m.t}:<br><span class="num">${fmtV(v)}</span><br><span style="color:var(--ink-3)">${nf.int(r.viviendas)} viviendas · ubicación ${f.properties.ubicacion}${st.foco ? "" : " · clic: ver su comuna"}</span>`;
   tip.hidden = false;
   tip.style.left = Math.max(6, Math.min(ev.clientX - box.left + 14, box.width - 250)) + "px"; tip.style.top = ev.clientY - box.top + 14 + "px";
   resaltarMicro(f.properties.id);
 }
 function resaltarMicro(id) {
   d3.selectAll("#capa-micro path").classed("hi", f => f.properties.id === id);
+  if (id) d3.selectAll("#capa-micro path").filter(f => f.properties.id === id).raise();
   d3.selectAll("table.rank tbody tr").classed("hi", d => d && d.id === id);
+  d3.selectAll(".dist rect").classed("hi", d => d && d.id === id);
 }
 function encuadrarMicro(id) {
   const f = MGEO && MGEO.features.find(x => x.properties.id === id); if (!f) return;
@@ -613,16 +782,62 @@ function encuadrarMicro(id) {
   const k = Math.min(10, 0.35 / Math.max((x1 - x0) / W, (y1 - y0) / H));
   svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2));
 }
+function tarjeta(cont, r) {
+  const v = valorMicro(r);
+  cont.append("button").attr("type", "button").attr("class", "card")
+    .html(`<span class="sw" style="background:${colorDe(v)}"></span><span>Mz ${r.mz_min}–${r.mz_max}</span><span class="v">${relActivo() ? fmtCorte(v) : metrica().f(v)}</span><small>${nf.int(r.viviendas)} viviendas</small>`)
+    .on("mouseenter", () => resaltarMicro(r.id)).on("mouseleave", () => resaltarMicro(null))
+    .on("click", () => elegirMicro(r.id, true));
+}
+function fichaFoco(el) {
+  const a = byCut.get(st.foco), m = metrica(), L = m.lente ? LENTES[m.lente] : null;
+  const filas = microDatos().filter(r => r.cut === st.foco);
+  const head = el.append("div").attr("class", "head");
+  head.append("div").html(`<span class="eyebrow">Comuna · ${filas.length} microbarrios</span><h2>${a.nombre}</h2><p class="hint">${nf.int(a.viviendas)} viviendas · ${nf.int(a.n_ventas_2426 || 0)} ventas 2024–26</p>`);
+  head.append("div").append("button").attr("class", "btn").text("← Gran Santiago").on("click", salir);
+  if (L) el.append("p").attr("class", "aviso").text(L.texto);
+  else el.append("p").attr("class", "hint").text(`Color: ${m.t}${relActivo() ? ", frente a la mediana de la comuna" : ""}. Escala calculada solo con los microbarrios de ${a.nombre}.`);
+  const con = filas.map(r => ({ r, v: valorMicro(r) })).filter(d => d.v != null).sort((x, y) => y.v - x.v);
+  if (!con.length || escala.sinVariacion) {
+    const av = el.append("p").attr("class", "aviso").text(con.length ? `Todos los microbarrios de ${a.nombre} tienen ${m.f(con[0].v)} en este indicador: no distingue aquí. ` : "Sin datos suficientes por microbarrio para este indicador. ");
+    if (st.capa === "reavaluo" && st.m !== 3) av.append("button").attr("class", "btn").text("Cambiar a: alza anual mediana").on("click", () => { st.m = 3; controles(); pintar(); });
+    const det = el.append("details"); det.append("summary").text("Ficha comunal completa"); fichaComuna(det.append("div").attr("class", "ficha-in"), true);
+    return;
+  }
+  // Distribución: un bar por microbarrio, ordenado de mayor a menor (sirve de leyenda y de selector)
+  el.append("h3").text("Todos sus microbarrios, de mayor a menor");
+  const w = 360, h = 70, bw = w / con.length;
+  const ext = d3.extent(con, d => d.v), y0 = Math.min(0, ext[0]), y1 = Math.max(0, ext[1]);
+  const y = d3.scaleLinear().domain([y0, y1 === y0 ? y0 + 1 : y1]).range([h - 2, 2]);
+  const sv = el.append("svg").attr("class", "spark dist").attr("viewBox", `0 0 ${w} ${h}`).attr("role", "img").attr("aria-label", `Distribución de los microbarrios de ${a.nombre}`);
+  sv.selectAll("rect").data(con.map(d => ({ id: d.r.id, r: d.r, v: d.v }))).join("rect")
+    .attr("x", (d, i) => i * bw).attr("width", Math.max(bw - (bw > 3 ? 1 : 0), 0.8))
+    .attr("y", d => Math.min(y(d.v), y(0))).attr("height", d => Math.max(1.5, Math.abs(y(d.v) - y(0))))
+    .attr("fill", d => colorDe(d.v))
+    .on("mouseenter", (ev, d) => resaltarMicro(d.id)).on("mouseleave", () => resaltarMicro(null))
+    .on("click", (ev, d) => elegirMicro(d.id, true))
+    .append("title").text(d => `Manzanas ${d.r.mz_min}–${d.r.mz_max}: ${fmtV(d.v)}`);
+  const n = Math.min(5, Math.floor(con.length / 2));
+  const cards = el.append("div").attr("class", "cards");
+  const c1 = cards.append("div"), c2 = cards.append("div");
+  c1.append("h3").text(L ? L.alto : "Más altos");
+  c2.append("h3").text(L ? L.bajo : "Más bajos");
+  con.slice(0, n).forEach(d => tarjeta(c1, d.r));
+  con.slice(-n).reverse().forEach(d => tarjeta(c2, d.r));
+  const det = el.append("details");
+  det.append("summary").text("Ficha comunal completa");
+  fichaComuna(det.append("div").attr("class", "ficha-in"), true);
+}
 function fichaMicro(el) {
   const r = st.selMicro ? byMicro.get(st.selMicro) : null;
   if (!r) {
     const vis = microVisibles().filter(x => valorMicro(x) != null).sort((a, b) => valorMicro(b) - valorMicro(a)).slice(0, 5);
-    el.append("div").attr("class", "empty").html(`<span class="eyebrow">Microbarrios</span><h2>Elige un microbarrio</h2>
-      <p>Cada polígono agrupa manzanas SII consecutivas con valor de suelo similar. Acerca el mapa y la escala de color se ajusta a los microbarrios visibles.</p>
-      <p><span class="badge">Geometría aproximada</span> Los contornos son celdas de Voronoi en torno a direcciones geocodificadas; los semitransparentes tienen ubicación interpolada.</p>
+    el.append("div").attr("class", "empty").html(`<span class="eyebrow">Microbarrios · Gran Santiago</span><h2>Elige una comuna o un microbarrio</h2>
+      <p>Cada polígono agrupa manzanas SII consecutivas con valor de suelo similar. Clic en un microbarrio para ver su ficha y su comuna.</p>
+      <p><span class="badge">Geometría aproximada</span> Celdas de Voronoi en torno a direcciones geocodificadas; las semitransparentes tienen ubicación interpolada.</p>
       <p class="hint">Más altos a la vista en “${metrica().t}”:</p>`);
     const t = el.append("table").attr("class", "cmp-table");
-    vis.forEach(x => t.append("tr").style("cursor", "pointer").html(`<td>${byCut.get(x.cut).nombre} · mz ${x.mz_min}–${x.mz_max}</td><td class="num">${metrica().f(valorMicro(x))}</td>`).on("click", () => { st.selMicro = x.id; encuadrarMicro(x.id); pintar(); }));
+    vis.forEach(x => t.append("tr").style("cursor", "pointer").html(`<td>${byCut.get(x.cut).nombre} · mz ${x.mz_min}–${x.mz_max}</td><td class="num">${fmtV(valorMicro(x))}</td>`).on("click", () => elegirMicro(x.id, true)));
     return;
   }
   const c = byCut.get(r.cut), f = MGEO.features.find(x => x.properties.id === r.id);
@@ -630,51 +845,58 @@ function fichaMicro(el) {
   head.append("div").html(`<span class="eyebrow">Microbarrio · ${c.nombre}</span><h2>Manzanas ${r.mz_min}–${r.mz_max}</h2><p class="hint">${nf.int(r.viviendas)} viviendas · ${nf.int(r.n_ventas_2426 || 0)} ventas 2024–26 · <span class="badge">ubicación ${f ? f.properties.ubicacion : "—"}</span></p>`);
   const acc = head.append("div").style("display", "flex").style("gap", "6px");
   acc.append("button").attr("class", "btn").text("Encuadrar").on("click", () => encuadrarMicro(r.id));
-  acc.append("button").attr("class", "btn").text("Cerrar").on("click", () => { st.selMicro = null; pintar(); });
+  acc.append("button").attr("class", "btn").text(`← ${c.nombre}`).on("click", () => { st.selMicro = null; pintar(); if (st.foco) encuadrar(st.foco); });
+  const E = st.esc.toUpperCase();
+  // Lentes: puntaje y componentes (percentil en su comuna)
+  el.append("h3").text(`Lentes de oportunidad · escenario ${E}`);
+  const tl = el.append("table").attr("class", "cmp-table");
+  tl.append("thead").html('<tr><th>Lente</th><th class="num">Puntaje</th><th>Componentes (percentil en su comuna)</th></tr>');
+  Object.entries(LENTES).forEach(([nombre, L]) => {
+    const x = lente(nombre).get(r.id), comps = L.comps(E);
+    const det = comps.map(([k, , lbl, fm], i) => `${lbl}: ${r[k] == null && !/alza_anual/.test(k) ? "—" : fm(compVal(r, k))} <span style="color:var(--ink-3)">(${x && x.comps[i] != null ? es.format(".0f")(x.comps[i]) : "—"})</span>`).join("<br>");
+    tl.append("tr").html(`<td>${CAPAS.oportunidades.metricas.find(mm => mm.lente === nombre).t.split(":")[0]}</td><td class="num">${x && x.score != null ? es.format(".0f")(x.score) : "—"}</td><td style="font-size:.78rem">${det}</td>`);
+  });
+  el.append("p").attr("class", "hint").text("Posición relativa dentro de la comuna; no predice plusvalía.");
   const pares = filas => {
     const enCom = microDatos().filter(x => x.cut === r.cut);
-    const todos = microDatos();
     const pos = (k, v) => { const vs = enCom.map(x => x[k]).filter(x => x != null).sort((a, b) => b - a); return v == null ? "" : `${vs.indexOf(v) + 1} de ${vs.length}`; };
-    const med = (arr, k) => d3.median(arr, x => x[k]);
     const t = el.append("table").attr("class", "cmp-table");
     t.append("thead").html(`<tr><th>Indicador</th><th class="num">Microbarrio</th><th class="num">Mediana comuna</th><th class="num">En su comuna</th></tr>`);
     const tb = t.append("tbody");
-    filas.forEach(([lbl, k, fm]) => tb.append("tr").html(`<td>${lbl}</td><td class="num">${r[k] == null ? "—" : fm(r[k])}</td><td class="num">${med(enCom, k) == null ? "—" : fm(med(enCom, k))}</td><td class="num">${pos(k, r[k])}</td>`));
-    return todos;
+    filas.forEach(([lbl, k, fm]) => { const md = d3.median(enCom, x => compVal(x, k)); const vr = compVal(r, k); tb.append("tr").html(`<td>${lbl}</td><td class="num">${vr == null ? "—" : fm(vr)}</td><td class="num">${md == null ? "—" : fm(md)}</td><td class="num">${pos(k, r[k])}</td>`); });
   };
-  const E = st.esc.toUpperCase();
   el.append("h3").text(`Reavalúo 2027 · escenario ${E}`);
   pares([["% viviendas con alza > $200 mil/año", `r27_${E}_pct_alza_200k`, nf.pct], ["Alza anual mediana (las que suben)", `r27_${E}_alza_anual_mediana`, nf.clp]]);
-  el.append("h3").text("Avalúo frente al precio (ventas 2024–26)");
-  pares([["Avalúo/precio mediano", "rec_aval_precio_mediano", nf.r2], ["Precio/avalúo mediano", "bre_nivel_2426", nf.r2]]);
-  el.append("p").attr("class", "hint").html(`Ubícalo con precisión en <a href="https://www4.sii.cl/mapasui/internet/" target="_blank" rel="noopener">SII Mapas</a>: comuna ${c.nombre}, capa Manzanas, números ${r.mz_min} a ${r.mz_max}. Los indicadores de ventas se ocultan con menos de 30 ventas.`);
+  el.append("h3").text("Precio y avalúo (ventas 2024–26)");
+  pares([["Avalúo/precio mediano", "rec_aval_precio_mediano", nf.r2], ["Precio/avalúo mediano", "bre_nivel_2426", nf.r2], ["Cambio de la brecha desde 2022–23", "bre_cambio_pct", nf.pp], ["UF por m² (mediana)", "uf_m2_mediano_2426", nf.uf]]);
+  el.append("p").attr("class", "hint").html(`Verifica su ubicación exacta en <a href="https://www4.sii.cl/mapasui/internet/" target="_blank" rel="noopener">SII Mapas</a>: comuna ${c.nombre}, capa Manzanas, números ${r.mz_min} a ${r.mz_max}. Indicadores de ventas ocultos con menos de 30 ventas.`);
 }
 function rankingMicro() {
   const m = metrica(), t = d3.select("#ranking"); t.html("");
   const vis = microVisibles();
-  d3.select("#t-rank").text(`Microbarrios visibles en el mapa (${vis.length})`);
+  d3.select("#t-rank").text(st.foco ? `Microbarrios de ${byCut.get(st.foco).nombre} (${vis.length})` : `Microbarrios visibles en el mapa (${vis.length})`);
   const filas = vis.map(r => ({ id: r.id, cut: r.cut, comuna: byCut.get(r.cut).nombre, mz: `${r.mz_min}–${r.mz_max}`, valor: valorMicro(r), viviendas: r.viviendas }))
     .sort((a, b) => { const k = st.sortKey === "nombre" ? "comuna" : st.sortKey; const va = a[k], vb = b[k]; if (va == null) return 1; if (vb == null) return -1; return (va < vb ? -1 : va > vb ? 1 : 0) * st.sortDir; })
-    .slice(0, 60);
+    .slice(0, 80);
   const vmax = d3.max(filas, d => Math.abs(d.valor ?? 0)) || 1;
   const hr = t.append("thead").append("tr");
   hr.append("th").text("#");
-  [["nombre", "Comuna", false], ["mz", "Manzanas SII", false], ["valor", m.t, true], ["viviendas", "Viviendas", true]].forEach(([k, lbl, num]) => hr.append("th").attr("class", num ? "num" : null)
+  [["nombre", "Comuna", false], ["mz", "Manzanas SII", false], ["valor", m.t + (relActivo() ? " (vs mediana)" : ""), true], ["viviendas", "Viviendas", true]].forEach(([k, lbl, num]) => hr.append("th").attr("class", num ? "num" : null)
     .append("button").text(lbl + (st.sortKey === k ? (st.sortDir > 0 ? " ↑" : " ↓") : "")).on("click", () => { if (st.sortKey === k) st.sortDir *= -1; else { st.sortKey = k; st.sortDir = k === "nombre" || k === "mz" ? 1 : -1; } rankingMicro(); }));
-  hr.append("th").text("Escala");
+  hr.append("th").text("Color");
   const tb = t.append("tbody");
   filas.forEach((d, i) => {
     const tr = tb.append("tr").datum(d).classed("sel", d.id === st.selMicro)
       .on("mouseenter", () => resaltarMicro(d.id)).on("mouseleave", () => resaltarMicro(null))
-      .on("click", () => { st.selMicro = d.id; encuadrarMicro(d.id); pintar(); });
+      .on("click", () => elegirMicro(d.id, true));
     tr.append("td").attr("class", "num").text(i + 1);
     tr.append("td").text(d.comuna);
     tr.append("td").attr("class", "num").text(d.mz);
-    tr.append("td").attr("class", "num").html(d.valor == null ? '<span class="chip">n &lt; 30</span>' : m.f(d.valor));
+    tr.append("td").attr("class", "num").html(d.valor == null ? '<span class="chip">n &lt; 30</span>' : relActivo() ? fmtCorte(d.valor) : m.f(d.valor));
     tr.append("td").attr("class", "num").text(nf.int(d.viviendas));
-    tr.append("td").html(d.valor == null ? "" : `<span class="bar" style="width:${Math.max(2, 90 * Math.abs(d.valor) / vmax)}px;background:${escalaColor(d.valor)}"></span>`);
+    tr.append("td").html(d.valor == null ? "" : `<span class="bar" style="width:${Math.max(2, 90 * Math.abs(d.valor) / vmax)}px;background:${colorDe(d.valor)}"></span>`);
   });
-  if (vis.length > 60) t.append("caption").attr("class", "hint").style("caption-side", "bottom").style("text-align", "left").text("Se muestran los 60 primeros; acerca el mapa para acotar.");
+  if (vis.length > 80) t.append("caption").attr("class", "hint").style("caption-side", "bottom").style("text-align", "left").text("Se muestran los 80 primeros; acerca el mapa o elige una comuna para acotar.");
 }
 
 // ---- Ranking ----
@@ -699,7 +921,7 @@ function ranking() {
     tr.append("td").text(d.nombre);
     tr.append("td").attr("class", "num").html(d.valor == null ? '<span class="chip">n &lt; 30</span>' : m.f(d.valor) + (d.ic != null ? ` <span style="color:var(--ink-3)">± ${es.format(".1f")(d.ic)}</span>` : ""));
     tr.append("td").attr("class", "num").text(nf.int(d.viviendas));
-    tr.append("td").html(d.valor == null ? "" : `<span class="bar" style="width:${Math.max(2, 90 * Math.abs(d.valor) / vmax)}px;background:${escalaColor(d.valor)}"></span>`);
+    tr.append("td").html(d.valor == null ? "" : `<span class="bar" style="width:${Math.max(2, 90 * Math.abs(d.valor) / vmax)}px;background:${colorDe(d.valor)}"></span>`);
   });
 }
 
@@ -709,24 +931,38 @@ function seg(id, opciones, actual, alElegir) {
   opciones.forEach(([v, lbl]) => el.append("button").attr("type", "button").attr("aria-pressed", v === actual).text(lbl).on("click", () => alElegir(v)));
 }
 function controles() {
-  seg("unidad", [["comuna", "Comunas"], ["micro", "Microbarrios"]], st.unidad, v => { st.unidad = v; if (v === "micro") ajustarAMicro(); st.selMicro = null; st.sortKey = "valor"; st.sortDir = -1; controles(); pintar(); });
-  seg("capa", Object.entries(CAPAS).map(([k, c]) => [k, c.nombre]), st.capa, v => { st.capa = v; st.m = metricasDe(v)[0].i; st.sortKey = "valor"; st.sortDir = -1; guardar(); controles(); pintar(); });
-  d3.selectAll("#capa button").property("disabled", (d, i, n) => { const k = Object.keys(CAPAS)[i]; return st.unidad === "micro" && metricasDe(k).length === 0; })
-    .attr("title", (d, i) => (st.unidad === "micro" && metricasDe(Object.keys(CAPAS)[i]).length === 0 ? "No disponible por microbarrio" : null));
+  seg("unidad", [["comuna", "Comunas"], ["micro", "Microbarrios"]], st.unidad, v => {
+    if (v === st.unidad) return;
+    if (v === "comuna") return salir();
+    st.unidad = "micro"; st.foco = null; st.selMicro = null; asegurarMetricaMicro(true); ajustarAMicro();
+    st.sortKey = "valor"; st.sortDir = -1; controles(); pintar();
+  });
+  seg("capa", Object.entries(CAPAS).map(([k, c]) => [k, c.nombre]), st.capa, v => {
+    st.capa = v;
+    if (CAPAS[v].soloMicro && st.unidad === "comuna") { st.unidad = "micro"; ajustarAMicro(); }
+    st.m = metricasDe(v)[0].i;
+    if (st.unidad === "micro") asegurarMetricaMicro(true);
+    st.sortKey = "valor"; st.sortDir = -1; guardar(); controles(); pintar();
+  });
+  d3.selectAll("#capa button").property("disabled", (d, i) => { const k = Object.keys(CAPAS)[i]; return !CAPAS[k].soloMicro && metricasDe(k).length === 0; })
+    .attr("title", (d, i) => { const k = Object.keys(CAPAS)[i]; return CAPAS[k].soloMicro && st.unidad === "comuna" ? "Pasa a microbarrios" : !CAPAS[k].soloMicro && metricasDe(k).length === 0 ? "No disponible por microbarrio" : null; });
   d3.select("#ctl-esc").attr("hidden", CAPAS[st.capa].escenario ? null : true);
   seg("esc", ESCS, st.esc, v => { st.esc = v; controles(); pintar(); });
-  seg("escala", [["vista", "Ajustar a la vista"], ["fija", "Fija"]], st.escala, v => { st.escala = v; controles(); pintar(); });
+  d3.select("#ctl-rel").attr("hidden", st.unidad === "micro" && !metrica().lente ? null : true);
+  seg("rel", [[false, "Valor"], [true, "Frente a mediana comunal"]], st.rel, v => { st.rel = v; controles(); pintar(); });
+  seg("escala", [["cuant", "Cuantiles"], ["cont", "Continua"], ["fija", "Fija (todo)"]], st.escala, v => { st.escala = v; controles(); pintar(); });
+  d3.selectAll("#escala button").attr("title", (d, i) => ["Cada color reúne la misma cantidad de unidades visibles (máximo contraste)", "Gradiente proporcional al valor (logarítmico en montos)", "Cuantiles sobre todo el Gran Santiago, sin ajustar al zoom"][i]);
   const sel = d3.select("#metrica"); sel.html("");
   metricasDe(st.capa).forEach(({ m, i }) => sel.append("option").attr("value", i).property("selected", i === st.m).text(m.t));
   d3.select("#nota-capa").text(st.unidad === "micro"
-    ? "Microbarrios: grupos de manzanas SII consecutivas con valor de suelo similar. Polígonos APROXIMADOS (direcciones geocodificadas y celdas de Voronoi) hasta recibir la cartografía oficial del SII."
+    ? (CAPAS[st.capa].soloMicro ? CAPAS[st.capa].nota + " " : "") + "Polígonos APROXIMADOS (direcciones geocodificadas y celdas de Voronoi) hasta recibir la cartografía oficial del SII."
     : CAPAS[st.capa].nota);
 }
-d3.select("#metrica").on("change", function () { st.m = +this.value; pintar(); });
+d3.select("#metrica").on("change", function () { st.m = +this.value; controles(); pintar(); });
 d3.select("#lista-comunas").selectAll("option").data(DATA.comunas).join("option").attr("value", c => c.nombre);
 d3.select("#buscar").on("change", function () {
   const q = this.value.trim().toLowerCase(); const c = DATA.comunas.find(c => c.nombre.toLowerCase() === q) || DATA.comunas.find(c => c.nombre.toLowerCase().startsWith(q));
-  if (c) { st.sel = c.cut; st.cmp = null; pintar(); encuadrar(c.cut); } else toast("No encontré esa comuna");
+  if (c) enfocar(c.cut); else toast("No encontré esa comuna");
 });
 d3.select("#copiar").on("click", () => {
   const m = metrica();
@@ -738,7 +974,7 @@ function fallbackCopiar(txt) { const ta = document.createElement("textarea"); ta
 
 // ---- Estado en la URL: #capa-esc-indicador-comuna ----
 function hash() {
-  const h = `${st.capa}-${st.esc}-m${st.m}-${st.sel || "todas"}-${st.unidad === "micro" ? "mb" : "co"}`;
+  const h = `${st.capa}-${st.esc}-m${st.m}-${st.sel || "todas"}-${st.unidad === "micro" ? "mb" : "co"}-${st.foco || "gs"}-${st.escala}-${st.rel ? "rel" : "val"}`;
   if (location.hash.slice(1) !== h) { try { history.replaceState(null, "", "#" + h); } catch (e) {} }
 }
 function leerHash() {
@@ -747,13 +983,17 @@ function leerHash() {
     st.capa = p[0]; if (["s0", "s1", "s2"].includes(p[1])) st.esc = p[1];
     const mi = parseInt(p[2].slice(1), 10); if (mi >= 0 && mi < CAPAS[st.capa].metricas.length) st.m = mi;
     st.sel = byCut.has(p[3]) ? p[3] : null;
-    st.unidad = p[4] === "mb" ? "micro" : "comuna";
-    if (st.unidad === "micro" && !CAPAS[st.capa].metricas[st.m].micro) { const x = metricasDe(st.capa)[0]; if (x) st.m = x.i; else { st.capa = "reavaluo"; st.m = 0; } }
+    st.unidad = p[4] === "mb" || CAPAS[st.capa].soloMicro ? "micro" : "comuna";
+    st.foco = st.unidad === "micro" && byCut.has(p[5]) ? p[5] : null;
+    if (["cuant", "cont", "fija"].includes(p[6])) st.escala = p[6];
+    st.rel = p[7] === "rel";
+    if (st.unidad === "micro") asegurarMetricaMicro(false);
+    else if (CAPAS[st.capa].metricas[st.m].soloMicro) { st.capa = "reavaluo"; st.m = 0; }
     return true;
   }
   return false;
 }
-window.addEventListener("hashchange", () => { if (leerHash()) { controles(); pintar(); } });
+window.addEventListener("hashchange", () => { if (leerHash()) { controles(); pintar(); if (st.foco) encuadrar(st.foco); } });
 
 // ---- Tema ----
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", pintar);
@@ -762,4 +1002,5 @@ new MutationObserver(pintar).observe(document.documentElement, { attributes: tru
 // ---- Inicio ----
 if (!leerHash()) { try { const c = localStorage.getItem("atlas-capa"); if (c && CAPAS[c]) st.capa = c; } catch (e) {} }
 controles(); ajustarEtiquetas(); pintar();
+if (st.foco) encuadrar(st.foco);
 </script>

@@ -126,18 +126,27 @@ def microbarrios() -> dict:
             sube.filter(sube > 0).median().alias(f"r27_{e}_alza_anual_mediana"),
         ]
     a = r.group_by("microbarrio_id").agg(aggs)
-    v = pl.read_parquet(MARTS / "fct_venta.parquet", columns=["microbarrio_id", "anio", "ratio_ia", "outlier_precio", "primera_venta_obra_nueva"])
-    v = v.filter(pl.col("anio").is_between(2024, 2026) & pl.col("ratio_ia").is_not_null() & ~pl.col("outlier_precio") & ~pl.col("primera_venta_obra_nueva"))
+    v = pl.read_parquet(MARTS / "fct_venta.parquet", columns=["microbarrio_id", "anio", "ratio_ia", "uf_m2", "outlier_precio", "primera_venta_obra_nueva"])
+    v = v.filter(pl.col("ratio_ia").is_not_null() & ~pl.col("outlier_precio") & ~pl.col("primera_venta_obra_nueva"))
+    reciente = pl.col("anio").is_between(2024, 2026)
+    previo = pl.col("anio").is_between(2022, 2023)
     b = v.group_by("microbarrio_id").agg(
-        pl.len().alias("n_ventas_2426"),
-        (1 / pl.col("ratio_ia")).median().alias("rec_aval_precio_mediano"),
-        pl.col("ratio_ia").log().median().exp().alias("bre_nivel_2426"),
+        reciente.sum().alias("n_ventas_2426"),
+        previo.sum().alias("n_ventas_2223"),
+        (1 / pl.col("ratio_ia")).filter(reciente).median().alias("rec_aval_precio_mediano"),
+        pl.col("ratio_ia").filter(reciente).log().median().alias("_log_2426"),
+        pl.col("ratio_ia").filter(previo).log().median().alias("_log_2223"),
+        pl.col("uf_m2").filter(reciente & (pl.col("uf_m2") > 0)).median().alias("uf_m2_mediano_2426"),
+    ).with_columns(
+        pl.col("_log_2426").exp().alias("bre_nivel_2426"),
+        ((pl.col("_log_2426") - pl.col("_log_2223")).exp() * 100 - 100).alias("bre_cambio_pct"),
     )
     d = a.join(b, on="microbarrio_id", how="left").join(cut_map().select("cod_comuna", "cut"), on="cod_comuna")
-    d = d.with_columns([pl.when(pl.col("n_ventas_2426") >= N_MIN).then(pl.col(c)).otherwise(None).alias(c) for c in ("rec_aval_precio_mediano", "bre_nivel_2426")])
+    d = d.with_columns([pl.when(pl.col("n_ventas_2426") >= N_MIN).then(pl.col(c)).otherwise(None).alias(c) for c in ("rec_aval_precio_mediano", "bre_nivel_2426", "uf_m2_mediano_2426")])
+    d = d.with_columns(pl.when((pl.col("n_ventas_2426") >= N_MIN) & (pl.col("n_ventas_2223") >= N_MIN)).then(pl.col("bre_cambio_pct")).otherwise(None).alias("bre_cambio_pct"))
     # Formato compacto: encabezado de campos + filas como arreglos (≈ 120 KB para 2.000 microbarrios)
-    campos = ["id", "mz_min", "mz_max", "viviendas"] + [f"r27_{e}_{m}" for e in ESC for m in ("alza_avaluo_pct", "pct_alza_200k", "alza_anual_mediana")] + ["rec_aval_precio_mediano", "bre_nivel_2426", "n_ventas_2426"]
-    dec = {"rec_aval_precio_mediano": 3, "bre_nivel_2426": 3}
+    campos = ["id", "mz_min", "mz_max", "viviendas"] + [f"r27_{e}_{m}" for e in ESC for m in ("alza_avaluo_pct", "pct_alza_200k", "alza_anual_mediana")] + ["rec_aval_precio_mediano", "bre_nivel_2426", "n_ventas_2426", "uf_m2_mediano_2426", "bre_cambio_pct"]
+    dec = {"rec_aval_precio_mediano": 3, "bre_nivel_2426": 3, "uf_m2_mediano_2426": 1, "bre_cambio_pct": 1}
     out: dict = {"campos": campos, "comunas": {}}
     d = d.rename({"microbarrio_id": "id"})
     for row in d.sort("cod_comuna", "mz_min").iter_rows(named=True):
