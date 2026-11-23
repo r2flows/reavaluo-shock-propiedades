@@ -27,6 +27,14 @@ def main() -> None:
         origen = WEB / "data" / nombre
         if origen.exists():
             (salida.parent / "data" / nombre).write_bytes(origen.read_bytes())
+    # Sitio para Railway: index.html + Dockerfile/Caddyfile (web/deploy/)
+    (salida.parent / "index.html").write_text(html, encoding="utf8")
+    for nombre in ("Dockerfile", "Caddyfile"):
+        (salida.parent / nombre).write_bytes((WEB / "deploy" / nombre).read_bytes())
+    # Copia de data/ con otro nombre: `railway up` respeta el .gitignore del repo, que excluye "data/"
+    (salida.parent / "sitio_datos").mkdir(exist_ok=True)
+    for f in (salida.parent / "data").iterdir():
+        (salida.parent / "sitio_datos" / f.name).write_bytes(f.read_bytes())
     print(f"[pagina] {salida.relative_to(ROOT)} ({salida.stat().st_size / 1024:.0f} KB)")
 
 
