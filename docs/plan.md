@@ -130,5 +130,6 @@ Esquema común: `ratio_ia`, ciclo de reavalúo y nivel legal de tasación. Candi
 - [ ] Riesgo reputacional de productos dirigidos a vendedores vulnerables.
 - [x] **Fase 6 (23-11-2026):** P3 nulo → se abandona el producto "vendedor forzado". P1 confirma reversión de la brecha (−1,2 pp de retorno a 3 años por +10% de brecha; p perm. 0,0015), pero no se replica en 2021. Ver `docs/fase6_resultados_p1_y_resumen.md`.
 - [x] **R1 (réplica en 33 comunas nuevas del Gran Santiago): no confirma H1.1** (β −0,03; p perm. 0,21). La brecha no es un predictor útil de plusvalía. Se reorienta el producto: estimador y reclamo de contribuciones, comparables depurados y predictor del reavalúo 2027.
+- [x] **Fase 7:** predictor del reavalúo 2027 por escenarios (S0 +1%, S2 +13%, S1 +26% real). Backtest 2022: error por rol de 8,9% con el nivel correcto; entre comunas el SII traspasa ~45% de la brecha. Ver `docs/fase7_reavaluo2027.md`.
 - [ ] Fase 5: el índice por barrio es ruidoso (retorno a 3 años ±13%). La primera mirada no muestra que la brecha prediga retornos (corr. −0,03). En la Fase 6, evitar correlaciones mecánicas: las variables y el objetivo no pueden compartir ventas ni años extremos.
 - [ ] Barrios inferidos por numeración de manzanas: validar la contigüidad con la cartografía del SII.
