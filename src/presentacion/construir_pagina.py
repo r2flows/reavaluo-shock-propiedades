@@ -21,6 +21,9 @@ def main() -> None:
     salida = WEB / "build" / "mapa.html"
     salida.parent.mkdir(parents=True, exist_ok=True)
     salida.write_text(html, encoding="utf8")
+    # Archivo de apoyo (se publica junto a la página como data/microbarrios.json)
+    (salida.parent / "data").mkdir(exist_ok=True)
+    (salida.parent / "data" / "microbarrios.json").write_bytes((WEB / "data" / "microbarrios.json").read_bytes())
     print(f"[pagina] {salida.relative_to(ROOT)} ({salida.stat().st_size / 1024:.0f} KB)")
 
 

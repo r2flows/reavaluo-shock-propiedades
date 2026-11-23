@@ -128,6 +128,9 @@ table.rank tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 .bar { height: 8px; border-radius: 0 4px 4px 0; display: inline-block; vertical-align: middle; }
 .chip { display: inline-block; font-size: 0.72rem; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--rule); color: var(--ink-2); }
 
+.strip { width: 100%; height: auto; display: block; }
+.strip rect { stroke: var(--surface); stroke-width: 1; }
+.strip rect.hi { stroke: var(--hilite); stroke-width: 2; }
 .meth { display: grid; gap: 10px; color: var(--ink-2); font-size: 0.9rem; }
 .meth ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 6px; max-width: 80ch; }
 .meth strong { color: var(--ink); }
@@ -186,7 +189,7 @@ table.rank tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
       <li><strong>Potencial de reclamo:</strong> el avalúo del SII es regresivo (PRD 1,10–1,32; el estándar internacional IAAO es 0,98–1,03). Las viviendas más baratas quedan tasadas más cerca de su precio. Un PRD alto y una razón avalúo/precio alta sugieren dónde un reclamo de avalúo tiene más base.</li>
       <li><strong>Mercado:</strong> índice SPAR (precio ÷ avalúo fijo de referencia) de ventas de segunda mano. La trama de puntos marca retornos que no se distinguen de cero con el intervalo de confianza de 95%.</li>
       <li><strong>Datos:</strong> transferencias F2890 y detalle catastral del SII, con UF del SII. Las comunas SII Santiago Centro, Oeste y Sur se muestran juntas como Santiago. Los indicadores con menos de 30 ventas no se muestran (trama gris). No hay datos por propiedad en esta página.</li>
-      <li><strong>Pendiente:</strong> el zoom dentro de cada comuna (barrios) espera la geometría de manzanas del SII.</li>
+      <li><strong>Pendiente:</strong> el zoom dentro de cada comuna espera la cartografía de manzanas del SII, que se pedirá por Ley de Transparencia. Mientras tanto, la ficha muestra los microbarrios (grupos de manzanas consecutivas con valor de suelo similar) como franja y ranking, identificados por sus números de manzana SII.</li>
     </ul>
     <p class="hint">Fuente del análisis y pre-registro: repositorio r2flows/reavaluo-shock-propiedades. Límites comunales: paquete chilemapas.</p>
   </section>
@@ -455,6 +458,7 @@ function ficha() {
       tb.append("tr").html(`<td>${lbl}</td><td class="num">${va == null ? "—" : f(va)}</td><td class="num">${b ? (vb == null ? "—" : f(vb)) : rango(k, va)}</td>`);
     });
   });
+  microSeccion(el, a);
   el.append("h3").text("Precio/avalúo mediano por año");
   sparkline(el, DATA.series[a.cut]?.brecha, b ? DATA.series[b.cut]?.brecha : null, v => nf.r2(v), "El reavalúo 2022 corta la serie: los avalúos nuevos bajan la razón.");
   el.append("h3").text("Índice de precios SPAR (2010 = 100, en UF)");
@@ -483,6 +487,48 @@ function sparkline(el, sa, sb, f, nota) {
     .on("mousemove", ev => { const [px] = d3.pointer(ev); const yr = Math.round(x.invert(px)); const pa = sa.find(d => d[0] === yr); if (!pa) return; const pb = sb ? sb.find(d => d[0] === yr) : null; guia.attr("x1", x(yr)).attr("x2", x(yr)).attr("display", null); lec.attr("x", Math.min(Math.max(x(yr), m.l + 40), w - m.r - 40)).attr("display", null).text(`${yr}: ${f(pa[1])}${pb ? " · " + f(pb[1]) : ""}`); })
     .on("mouseleave", () => { guia.attr("display", "none"); lec.attr("display", "none"); });
   el.append("p").attr("class", "hint").text(nota);
+}
+
+// ---- Microbarrios (sin geometría hasta recibir la cartografía de manzanas del SII) ----
+let MICRO = null;
+fetch("data/microbarrios.json").then(r => (r.ok ? r.json() : null)).then(j => { MICRO = j; if (st.sel) ficha(); }).catch(() => {});
+function microMetrica() {
+  const k = metrica().k, E = st.esc.toUpperCase();
+  if (/pct_alza_200k|alza_avaluo_pct|alza_anual_mediana/.test(k)) return { k: k.replace("{E}", E), t: metrica().t, f: metrica().f };
+  if (k === "r27_{E}_pasan_a_pagar") return { k: `r27_${E}_alza_avaluo_pct`, t: "Alza mediana del avalúo 2027", f: nf.pct };
+  if (k.startsWith("rec_")) return { k: "rec_aval_precio_mediano", t: "Avalúo/precio mediano 2024–26", f: nf.r2 };
+  if (k.startsWith("bre_")) return { k: "bre_nivel_2426", t: "Precio/avalúo 2024–26", f: nf.r2 };
+  return { k: `r27_${E}_alza_avaluo_pct`, t: "Alza mediana del avalúo 2027", f: nf.pct };
+}
+function microSeccion(el, a) {
+  el.append("h3").text(`Microbarrios de ${a.nombre}`);
+  if (!MICRO) { el.append("p").attr("class", "hint").text("Cargando microbarrios…"); return; }
+  const filas = (MICRO.comunas[a.cut] || []).map(r => Object.fromEntries(MICRO.campos.map((c, i) => [c, r[i]])));
+  const mm = microMetrica();
+  const vals = filas.map(r => r[mm.k]).filter(v => v != null).sort(d3.ascending);
+  if (vals.length < 2) { el.append("p").attr("class", "hint").text("Sin datos suficientes por microbarrio."); return; }
+  const R = oscuro() ? RAMPAS.dark : RAMPAS.light;
+  let lo = d3.quantileSorted(vals, 0.05), hi = d3.quantileSorted(vals, 0.95); if (lo === hi) { lo -= 1; hi += 1; }
+  const col = d3.scaleSequential(d3.interpolateRgbBasis(R.seq)).domain([lo, hi]).clamp(true);
+  el.append("p").attr("class", "hint").text(`${filas.length} microbarrios ordenados por número de manzana SII (ancho = viviendas). Color: ${mm.t}, escala de esta comuna (${mm.f(lo)} a ${mm.f(hi)}). Sin mapa hasta recibir la cartografía de manzanas del SII.`);
+  const w = 360, h = 26, tot = d3.sum(filas, r => r.viviendas);
+  const s = el.append("svg").attr("class", "strip").attr("viewBox", `0 0 ${w} ${h}`).attr("role", "img").attr("aria-label", `Franja de microbarrios de ${a.nombre}`);
+  let x = 0;
+  filas.forEach(r => {
+    const ww = (w * r.viviendas) / tot, v = r[mm.k];
+    s.append("rect").attr("x", x).attr("y", 0).attr("width", Math.max(ww, 0.6)).attr("height", h).attr("fill", v == null ? "url(#hatch)" : col(v))
+      .append("title").text(`Manzanas ${r.mz_min}–${r.mz_max} · ${nf.int(r.viviendas)} viviendas · ${v == null ? "sin datos" : mm.f(v)}`);
+    x += ww;
+  });
+  const orden = filas.filter(r => r[mm.k] != null).sort((p, q) => q[mm.k] - p[mm.k]);
+  const t = el.append("table").attr("class", "cmp-table");
+  t.append("thead").html(`<tr><th>Microbarrio (manzanas SII)</th><th class="num">Viviendas</th><th class="num">${mm.t}</th></tr>`);
+  const tb = t.append("tbody");
+  const fila = r => tb.append("tr").html(`<td>${r.mz_min}–${r.mz_max}</td><td class="num">${nf.int(r.viviendas)}</td><td class="num">${mm.f(r[mm.k])}</td>`);
+  orden.slice(0, 4).forEach(fila);
+  if (orden.length > 8) tb.append("tr").html('<td colspan="3" class="hint">…</td>');
+  orden.slice(-4).forEach(r => { if (orden.indexOf(r) >= 4) fila(r); });
+  el.append("p").attr("class", "hint").html('Para ubicar un microbarrio, busca sus números de manzana en <a href="https://www4.sii.cl/mapasui/internet/" target="_blank" rel="noopener">SII Mapas</a> (capa Manzanas).');
 }
 
 // ---- Ranking ----
