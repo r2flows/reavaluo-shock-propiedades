@@ -136,9 +136,10 @@ def microbarrios() -> dict:
     d = a.join(b, on="microbarrio_id", how="left").join(cut_map().select("cod_comuna", "cut"), on="cod_comuna")
     d = d.with_columns([pl.when(pl.col("n_ventas_2426") >= N_MIN).then(pl.col(c)).otherwise(None).alias(c) for c in ("rec_aval_precio_mediano", "bre_nivel_2426")])
     # Formato compacto: encabezado de campos + filas como arreglos (≈ 120 KB para 2.000 microbarrios)
-    campos = ["mz_min", "mz_max", "viviendas"] + [f"r27_{e}_{m}" for e in ESC for m in ("alza_avaluo_pct", "pct_alza_200k", "alza_anual_mediana")] + ["rec_aval_precio_mediano", "bre_nivel_2426", "n_ventas_2426"]
+    campos = ["id", "mz_min", "mz_max", "viviendas"] + [f"r27_{e}_{m}" for e in ESC for m in ("alza_avaluo_pct", "pct_alza_200k", "alza_anual_mediana")] + ["rec_aval_precio_mediano", "bre_nivel_2426", "n_ventas_2426"]
     dec = {"rec_aval_precio_mediano": 3, "bre_nivel_2426": 3}
     out: dict = {"campos": campos, "comunas": {}}
+    d = d.rename({"microbarrio_id": "id"})
     for row in d.sort("cod_comuna", "mz_min").iter_rows(named=True):
         fila = []
         for c in campos:

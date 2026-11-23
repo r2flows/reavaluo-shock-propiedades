@@ -23,7 +23,10 @@ def main() -> None:
     salida.write_text(html, encoding="utf8")
     # Archivo de apoyo (se publica junto a la página como data/microbarrios.json)
     (salida.parent / "data").mkdir(exist_ok=True)
-    (salida.parent / "data" / "microbarrios.json").write_bytes((WEB / "data" / "microbarrios.json").read_bytes())
+    for nombre in ("microbarrios.json", "microbarrios.geojson"):
+        origen = WEB / "data" / nombre
+        if origen.exists():
+            (salida.parent / "data" / nombre).write_bytes(origen.read_bytes())
     print(f"[pagina] {salida.relative_to(ROOT)} ({salida.stat().st_size / 1024:.0f} KB)")
 
 
