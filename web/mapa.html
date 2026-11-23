@@ -108,6 +108,25 @@ text.mlab { font-family: var(--font-mono); fill: var(--ink); paint-order: stroke
 details > summary { cursor: pointer; font-family: var(--font-display); font-weight: 650; }
 details[open] > summary { margin-bottom: 10px; }
 details .ficha-in { display: grid; gap: 12px; }
+/* Íconos explicativos y glosario */
+.info { display: inline-flex; align-items: center; gap: 4px; vertical-align: -4px; border: 0; background: none; padding: 1px 2px; margin: 0 1px; color: var(--accent); cursor: help; font: inherit; font-size: 0.84rem; text-transform: none; letter-spacing: 0; font-weight: 500; border-radius: 4px; }
+.info .ic { width: 18px; height: 18px; flex: none; transition: transform 120ms ease; }
+.info:hover .ic, .info[aria-expanded="true"] .ic { transform: scale(1.15); }
+.info span { text-decoration: underline dotted; text-underline-offset: 3px; }
+.info:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.pop { position: fixed; z-index: 30; background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: 10px; box-shadow: 0 12px 32px rgba(0,0,0,0.2); padding: 12px 14px; font-size: 0.9rem; line-height: 1.55; display: grid; gap: 6px; }
+.pop-h { display: flex; align-items: center; gap: 10px; }
+.pop-h strong { font-family: var(--font-display); font-size: 1rem; flex: 1; }
+.ic-l { width: 30px; height: 30px; color: var(--accent); flex: none; padding: 4px; background: var(--accent-soft); border-radius: 8px; }
+.pop-x { border: 0; background: none; font-size: 1.3rem; color: var(--ink-3); cursor: pointer; line-height: 1; padding: 0 2px; }
+.pasos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.paso { display: grid; grid-template-columns: 40px 1fr; gap: 10px; align-items: start; padding: 10px 12px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); font-size: 0.88rem; color: var(--ink-2); }
+.paso .ic-l { width: 40px; height: 40px; padding: 7px; }
+.paso strong { color: var(--ink); display: block; font-family: var(--font-display); }
+.faq { display: grid; gap: 16px 24px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.faq-item { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; }
+.faq-item h3 { margin-bottom: 3px; color: var(--ink); }
+.nota-links { display: inline-flex; flex-wrap: wrap; gap: 2px 10px; }
 .modo-micro path.overlay { display: none; }
 .seg button:disabled { opacity: 0.4; cursor: not-allowed; }
 .badge { display: inline-block; font-size: 0.72rem; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--ink-2); }
@@ -169,26 +188,31 @@ table.rank tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 
 <div class="wrap">
   <header>
-    <span class="eyebrow">Gran Santiago · 34 comunas · datos SII 2010–2026</span>
+    <span class="eyebrow">Gran Santiago · 34 comunas · datos públicos del SII</span>
     <h1>Atlas del avalúo santiaguino</h1>
-    <p class="lede">Qué tan expuesta está cada comuna al reavalúo 2027, dónde el avalúo pesa más frente al precio y cómo se movió el mercado. Haz clic en una comuna para ver sus microbarrios. Solo cifras agregadas por comuna y microbarrio, a partir de 1,5 millones de ventas y 3,4 millones de roles.</p>
+    <p class="lede">Descubre cuánto podrían subir las contribuciones de tu barrio con el reavalúo 2027, dónde el avalúo del SII pesa más frente al precio real y qué microbarrios destacan dentro de tu comuna. Toca cualquier ícono <span style="color:var(--accent);vertical-align:-3px;display:inline-block;width:16px;height:16px"><svg style="width:16px;height:16px" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg></span> para entender un concepto.</p>
   </header>
+  <div class="pasos" aria-label="Cómo usar el mapa">
+    <div class="paso"><svg class="ic-l" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16v-4M12 16V7M17 16v-6"/></svg><div><strong>1. Elige qué quieres ver</strong>Contribuciones 2027, reclamo de avalúo, precios u oportunidades.</div></div>
+    <div class="paso"><svg class="ic-l" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><div><strong>2. Toca tu comuna</strong>El mapa se acerca y la divide en microbarrios, con colores propios.</div></div>
+    <div class="paso"><svg class="ic-l" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/><path d="M8.5 11h5M11 8.5v5"/></svg><div><strong>3. Toca un microbarrio</strong>Ves su ficha y cómo se compara con el resto de su comuna.</div></div>
+  </div>
 
   <div class="controls" role="group" aria-label="Controles del mapa">
-    <div class="ctl"><span class="lbl" id="lbl-unidad">Unidad</span><div class="seg" id="unidad" aria-labelledby="lbl-unidad"></div></div>
-    <div class="ctl"><span class="lbl" id="lbl-capa">Capa</span><div class="seg" id="capa" aria-labelledby="lbl-capa"></div></div>
-    <div class="ctl" id="ctl-esc"><span class="lbl" id="lbl-esc">Escenario 2027</span><div class="seg" id="esc" aria-labelledby="lbl-esc"></div></div>
-    <div class="ctl"><label for="metrica">Indicador</label><select id="metrica"></select></div>
-    <div class="ctl" id="ctl-rel"><span class="lbl" id="lbl-rel">Mostrar</span><div class="seg" id="rel" aria-labelledby="lbl-rel"></div></div>
-    <div class="ctl"><span class="lbl" id="lbl-escala">Escala de color</span><div class="seg" id="escala" aria-labelledby="lbl-escala"></div></div>
-    <div class="ctl"><label for="buscar">Buscar comuna</label><input type="search" id="buscar" list="lista-comunas" placeholder="Ej.: Ñuñoa" autocomplete="off"><datalist id="lista-comunas"></datalist></div>
+    <div class="ctl"><span class="lbl" id="lbl-unidad">Ver por <span data-info="microbarrio"></span></span><div class="seg" id="unidad" aria-labelledby="lbl-unidad"></div></div>
+    <div class="ctl"><span class="lbl" id="lbl-capa">¿Qué quieres ver?</span><div class="seg" id="capa" aria-labelledby="lbl-capa"></div></div>
+    <div class="ctl" id="ctl-esc"><span class="lbl" id="lbl-esc">Escenario 2027 <span data-info="escenario"></span></span><div class="seg" id="esc" aria-labelledby="lbl-esc"></div></div>
+    <div class="ctl"><span class="lbl"><label for="metrica">Indicador</label> <span id="info-metrica"></span></span><select id="metrica"></select></div>
+    <div class="ctl" id="ctl-rel"><span class="lbl" id="lbl-rel">Mostrar <span data-info="mediana"></span></span><div class="seg" id="rel" aria-labelledby="lbl-rel"></div></div>
+    <div class="ctl"><span class="lbl" id="lbl-escala">Colores <span data-info="cuantiles"></span></span><div class="seg" id="escala" aria-labelledby="lbl-escala"></div></div>
+    <div class="ctl"><label for="buscar">Busca tu comuna</label><input type="search" id="buscar" list="lista-comunas" placeholder="Ej.: Ñuñoa" autocomplete="off"><datalist id="lista-comunas"></datalist></div>
   </div>
 
   <div class="main">
     <div class="panel mapbox">
       <p class="layer-note" id="nota-capa"></p>
       <div class="migas" id="migas" hidden></div>
-      <p class="hint" style="margin:0 4px 6px">Clic en una comuna: zoom a sus microbarrios · Mayús+clic: ficha y comparación sin zoom · Esc: volver · Arrastra para mover · Ctrl + rueda para acercar</p>
+      <p class="hint" style="margin:0 4px 6px">Toca una comuna para ver sus microbarrios · Esc para volver · Mayús+clic para comparar dos comunas · Ctrl + rueda para acercar</p>
       <svg id="mapa" viewBox="0 0 620 660" role="img" aria-labelledby="mapa-titulo">
         <title id="mapa-titulo">Mapa coroplético de las comunas del Gran Santiago</title>
         <defs>
@@ -207,28 +231,28 @@ table.rank tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 
   <section class="panel" aria-labelledby="t-rank" style="display:grid;gap:10px">
     <div class="ficha head" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:end">
-      <div><span class="eyebrow">Ranking</span><h2 id="t-rank">Comunas por indicador seleccionado</h2></div>
+      <div><span class="eyebrow">Ranking</span><h2 id="t-rank">Ranking de comunas</h2></div>
       <button class="btn" id="copiar">Copiar tabla (CSV)</button>
     </div>
     <div class="tablewrap"><table class="rank" id="ranking"></table></div>
   </section>
 
   <section class="panel meth" aria-labelledby="t-meth">
-    <span class="eyebrow">Metodología y límites</span>
-    <h2 id="t-meth">Cómo leer este atlas</h2>
-    <ul>
-      <li><strong>Las lentes de oportunidad muestran posición relativa, no pronósticos.</strong> Cada lente ordena los microbarrios dentro de su comuna (percentil 0–100). Se probó si la brecha precio/avalúo predice la plusvalía de un barrio: en 3 comunas piloto pareció que sí, pero la réplica en las otras 33 no lo confirmó (efecto 4 veces menor y no significativo). Tampoco el alza de contribuciones de 2022 aumentó las ventas.</li>
-      <li><strong>Reavalúo 2027:</strong> escenarios, no pronóstico. El SII decide cuánto sube el avalúo; en 2022 lo subió 28% real y cerró la brecha. Desde entonces la brecha está plana (~1,7). S0 supone que el SII mantiene la razón de 2022 (+1%), S1 que repite el cierre de 2022 (+26%) y S2 un punto medio. El exento sube con el avalúo y las tasas bajan para que la recaudación no crezca más de 10%. Montos en pesos del 2º semestre de 2026.</li>
-      <li><strong>Potencial de reclamo:</strong> el avalúo del SII es regresivo (PRD 1,10–1,32; el estándar internacional IAAO es 0,98–1,03). Las viviendas más baratas quedan tasadas más cerca de su precio. Un PRD alto y una razón avalúo/precio alta sugieren dónde un reclamo de avalúo tiene más base.</li>
-      <li><strong>Mercado:</strong> índice SPAR (precio ÷ avalúo fijo de referencia) de ventas de segunda mano. La trama de puntos marca retornos que no se distinguen de cero con el intervalo de confianza de 95%.</li>
-      <li><strong>Datos:</strong> transferencias F2890 y detalle catastral del SII, con UF del SII. Las comunas SII Santiago Centro, Oeste y Sur se muestran juntas como Santiago. Los indicadores con menos de 30 ventas no se muestran (trama gris). No hay datos por propiedad en esta página.</li>
-      <li><strong>Microbarrios:</strong> grupos de manzanas SII consecutivas con valor de suelo similar. Sus polígonos son APROXIMADOS: celdas de Voronoi en torno a unas 3 direcciones geocodificadas por microbarrio (OpenStreetMap), recortadas a la comuna; los semitransparentes tienen ubicación interpolada. Se reemplazarán por la cartografía de manzanas del SII, que se pedirá por Ley de Transparencia.</li>
-      <li><strong>Escala de color:</strong> por defecto, cuantiles: cada color reúne la misma cantidad de unidades visibles (o de la comuna en foco), para que las diferencias se vean aunque los valores estén concentrados. Si 40% o más comparten un mismo valor (por ejemplo 0%), esos van en gris y los cuantiles se calculan con el resto.</li>
-    </ul>
-    <p class="hint">Fuente del análisis y pre-registro: repositorio r2flows/reavaluo-shock-propiedades. Límites comunales: paquete chilemapas.</p>
+    <span class="eyebrow">Preguntas frecuentes</span>
+    <h2 id="t-meth">Cómo leer este mapa</h2>
+    <div class="faq">
+      <div class="faq-item"><svg class="ic-l" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/><path d="M8.5 11h5M11 8.5v5"/></svg><div><h3>¿Esto me dice dónde comprar para ganar plata?</h3><p>No. Las lentes ordenan los microbarrios dentro de su comuna según lo que buscas, pero no predicen plusvalía. Lo probamos: en 3 comunas piloto la diferencia entre precio y avalúo pareció anticipar subidas de precio, pero al repetirlo en el resto de Santiago el efecto desapareció. Tampoco encontramos que el alza de contribuciones de 2022 haya forzado más ventas.</p></div></div>
+      <div class="faq-item"><svg class="ic-l" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M12 13v5M9.5 15.5L12 13l2.5 2.5"/></svg><div><h3>¿Cuánto subirán mis contribuciones en 2027?</h3><p>Depende de cuánto suba el SII los avalúos, y eso aún no se sabe. Por eso mostramos tres escenarios: leve (+1%), moderado y fuerte (+26%, como en 2022). En cada uno, el monto exento sube junto con los avalúos y las tasas bajan para que la recaudación total no crezca más de 10%, como establece la ley. Los montos están en pesos de hoy.</p></div></div>
+      <div class="faq-item"><svg class="ic-l" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 14l2 2 4-4"/></svg><div><h3>¿Debería reclamar mi avalúo?</h3><p>Esta página no evalúa casos individuales, pero muestra dónde es más probable que valga la pena revisarlo. El avalúo del SII es regresivo: las viviendas más baratas quedan tasadas más cerca de su precio real que las caras. Revisa el avalúo de tu propiedad en sii.cl y compáralo con los precios de venta de tu barrio.</p></div></div>
+      <div class="faq-item"><svg class="ic-l" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><div><h3>¿Qué tan exactos son los microbarrios?</h3><p>Sus datos vienen del SII y son exactos. Sus contornos en el mapa son aproximados: los dibujamos a partir de unas tres direcciones reales por microbarrio, porque el SII todavía no publica sus mapas de manzanas (los pediremos por Ley de Transparencia). Para ubicar uno con precisión, usa sus números de manzana en SII Mapas.</p></div></div>
+      <div class="faq-item"><svg class="ic-l" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="5" height="8" rx="1"/><rect x="9.5" y="8" width="5" height="8" rx="1"/><rect x="16" y="8" width="5" height="8" rx="1"/></svg><div><h3>¿Por qué cambian los colores al acercarme?</h3><p>Porque la escala se ajusta a lo que estás mirando: así siempre ves contraste, incluso dentro de una comuna pareja. Si quieres comparar entre comunas con una misma vara, elige "Fija" en Colores.</p></div></div>
+      <div class="faq-item"><svg class="ic-l" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg><div><h3>¿De dónde salen los datos?</h3><p>De registros públicos del SII: 1,5 millones de compraventas y 3,4 millones de propiedades, con precios en UF. Solo mostramos cifras agregadas; no hay datos de propiedades individuales ni de sus dueños. Las zonas con menos de 30 ventas no muestran indicadores de precio. Santiago Centro, Oeste y Sur se muestran juntos como Santiago.</p></div></div>
+    </div>
+    <p class="hint">Análisis y metodología completos: repositorio público r2flows/reavaluo-shock-propiedades. Límites comunales: paquete chilemapas. Contornos de microbarrios: direcciones geocodificadas con OpenStreetMap.</p>
   </section>
 </div>
 <div class="toast" id="toast" hidden></div>
+<div class="pop" id="pop" role="dialog" aria-live="polite" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script>
@@ -240,61 +264,103 @@ const es = d3.formatLocale({ decimal: ",", thousands: ".", grouping: [3], curren
 const nf = { pct: v => es.format(".1f")(v) + "%", pp: v => (v > 0 ? "+" : "") + es.format(".1f")(v) + "%", int: v => es.format(",.0f")(v), clp: v => "$" + es.format(",.0f")(v), r2: v => es.format(".2f")(v), uf: v => es.format(".1f")(v) + " UF" };
 
 const CAPAS = {
-  reavaluo: { nombre: "Reavalúo 2027", escenario: true,
-    nota: "Proyección por escenario. El SII decide el nivel del alza; dentro de cada comuna se supone uniforme.",
+  reavaluo: { nombre: "Contribuciones 2027", escenario: true, g: ["reavaluo", "escenario"],
+    nota: "¿Cuánto podrían subir las contribuciones con el reavalúo 2027? El SII aún no define el alza: elige un escenario.",
     metricas: [
-      { k: "r27_{E}_pct_alza_200k", t: "% viviendas con alza > $200 mil/año", f: nf.pct, div: false, micro: true, relPp: true },
-      { k: "r27_{E}_alza_avaluo_pct", t: "Alza mediana del avalúo", f: nf.pct, div: false },
-      { k: "r27_{E}_pasan_a_pagar", t: "Viviendas que pasan a pagar", f: nf.int, div: false },
-      { k: "r27_{E}_alza_anual_mediana", t: "Alza anual mediana (las que suben)", f: nf.clp, div: false, micro: true, log: true },
+      { k: "r27_{E}_pct_alza_200k", t: "% de viviendas cuya contribución sube más de $200 mil al año", f: nf.pct, div: false, micro: true, relPp: true, g: "contribuciones" },
+      { k: "r27_{E}_alza_avaluo_pct", t: "Alza típica del avalúo", f: nf.pct, div: false, g: "avaluo" },
+      { k: "r27_{E}_pasan_a_pagar", t: "Viviendas que dejarían de estar exentas", f: nf.int, div: false, g: "exenta" },
+      { k: "r27_{E}_alza_anual_mediana", t: "Alza típica de la contribución anual (viviendas que suben)", f: nf.clp, div: false, micro: true, log: true, g: "contribuciones" },
     ] },
-  reclamo: { nombre: "Potencial de reclamo", escenario: false,
-    nota: "Ventas de segunda mano 2024–2026. Avalúo/precio alto y PRD alto indican avalúos relativamente más pesados.",
+  reclamo: { nombre: "¿Reclamar el avalúo?", escenario: false, g: ["reclamo", "prd"],
+    nota: "Dónde el avalúo fiscal está más cerca del precio real de venta: ahí pedir una revisión al SII tiene más base.",
     metricas: [
-      { k: "rec_aval_precio_mediano", t: "Avalúo/precio mediano", f: nf.r2, div: false, micro: true },
-      { k: "rec_pct_sobre_p75", t: "% ventas con avalúo/precio alto (sobre p75 del Gran Santiago)", f: nf.pct, div: false },
-      { k: "rec_prd", t: "PRD: regresividad (ideal 0,98–1,03)", f: nf.r2, div: false },
-      { k: "rec_cod", t: "COD: dispersión del avalúo (ideal < 15)", f: v => es.format(".0f")(v), div: false },
+      { k: "rec_aval_precio_mediano", t: "Avalúo como fracción del precio de venta (típico)", f: nf.r2, div: false, micro: true, g: "reclamo" },
+      { k: "rec_pct_sobre_p75", t: "% de ventas con avalúo alto respecto del precio", f: nf.pct, div: false, g: "reclamo" },
+      { k: "rec_prd", t: "Regresividad del avalúo (PRD · ideal 0,98–1,03)", f: nf.r2, div: false, g: "prd" },
+      { k: "rec_cod", t: "Disparidad del avalúo (COD · ideal bajo 15)", f: v => es.format(".0f")(v), div: false, g: "cod" },
     ] },
-  brecha: { nombre: "Brecha precio/avalúo", escenario: false,
-    nota: "Precio de venta ÷ avalúo fiscal. El reavalúo 2022 la bajó de 2,2 a 1,7; un aumento desde entonces anticipa más alza en 2027.",
+  brecha: { nombre: "Precio vs. avalúo", escenario: false, g: ["brecha"],
+    nota: "Cuántas veces el precio de venta supera al avalúo fiscal. Si esta razón crece, el SII tiende a subir más los avalúos.",
     metricas: [
-      { k: "bre_nivel_2426", t: "Precio/avalúo mediano 2024–2026", f: nf.r2, div: false, micro: true },
-      { k: "bre_cambio_pct", t: "Cambio desde 2022–2023", f: nf.pp, div: true, micro: true, relPp: true },
+      { k: "bre_nivel_2426", t: "Precio de venta ÷ avalúo (típico, 2024–2026)", f: nf.r2, div: false, micro: true, g: "brecha" },
+      { k: "bre_cambio_pct", t: "Cambio de esa razón desde 2022–2023", f: nf.pp, div: true, micro: true, relPp: true, g: "brecha" },
     ] },
-  mercado: { nombre: "Mercado", escenario: false,
-    nota: "Índice SPAR de segunda mano. La trama de puntos marca retornos no distinguibles de cero (IC 95%).",
+  mercado: { nombre: "Precios", escenario: false, g: ["spar", "uf"],
+    nota: "Cómo se movieron los precios de las viviendas usadas, descontada la inflación (en UF).",
     metricas: [
-      { k: "mer_ret_22_25_pct", t: "Retorno 2022 → 2025 (UF)", f: nf.pp, div: true, ic: "mer_ret_ic95_pp" },
-      { k: "mer_uf_m2", kMicro: "uf_m2_mediano_2426", t: "UF por m² construido (mediana 2024–26)", f: nf.uf, div: false, micro: true, log: true },
+      { k: "mer_ret_22_25_pct", t: "Cambio de precios 2022 → 2025 (en UF)", f: nf.pp, div: true, ic: "mer_ret_ic95_pp", g: "spar" },
+      { k: "mer_uf_m2", kMicro: "uf_m2_mediano_2426", t: "Precio por m² construido (UF, típico 2024–2026)", f: nf.uf, div: false, micro: true, log: true, g: "uf" },
     ] },
-  contribuciones: { nombre: "Contribuciones hoy", escenario: false,
-    nota: "Situación del 2º semestre de 2026, viviendas.",
+  contribuciones: { nombre: "Contribuciones hoy", escenario: false, g: ["contribuciones", "exenta"],
+    nota: "Quién paga y cuánto hoy (2º semestre de 2026), solo viviendas.",
     metricas: [
-      { k: "con_pct_exentas", t: "% viviendas exentas", f: nf.pct, div: false },
-      { k: "con_anual_mediana_afectas", t: "Contribución anual mediana (afectas)", f: nf.clp, div: false, log: true },
+      { k: "con_pct_exentas", t: "% de viviendas que no pagan (exentas)", f: nf.pct, div: false, g: "exenta" },
+      { k: "con_anual_mediana_afectas", t: "Contribución anual típica (viviendas que pagan)", f: nf.clp, div: false, log: true, g: "contribuciones" },
     ] },
-  oportunidades: { nombre: "Oportunidades", escenario: true, soloMicro: true,
-    nota: "Lentes por microbarrio: posición relativa dentro de su comuna (percentil 0–100), no pronóstico de plusvalía.",
+  oportunidades: { nombre: "Oportunidades", escenario: true, soloMicro: true, g: ["lentes"],
+    nota: "Compara los microbarrios de cada comuna según lo que buscas: comprar, reclamar tu avalúo o anticipar el alza 2027.",
     metricas: [
-      { k: "lente_comprador", t: "Lente comprador: precio bajo frente al avalúo y poca alza 2027", f: v => es.format(".0f")(v) + "/100", lente: "comprador", micro: true, soloMicro: true },
-      { k: "lente_reclamo", t: "Lente propietario: potencial de reclamo de avalúo", f: v => es.format(".0f")(v) + "/100", lente: "reclamo", micro: true, soloMicro: true },
-      { k: "lente_riesgo", t: "Lente riesgo 2027: dónde golpea más el alza", f: v => es.format(".0f")(v) + "/100", lente: "riesgo", micro: true, soloMicro: true },
+      { k: "lente_comprador", t: "Para comprar: dónde pagas menos por lo que vale", f: v => es.format(".0f")(v) + "/100", lente: "comprador", micro: true, soloMicro: true, g: "lentes" },
+      { k: "lente_reclamo", t: "Para reclamar tu avalúo: dónde el avalúo pesa más", f: v => es.format(".0f")(v) + "/100", lente: "reclamo", micro: true, soloMicro: true, g: "lentes" },
+      { k: "lente_riesgo", t: "Riesgo 2027: dónde subirían más las contribuciones", f: v => es.format(".0f")(v) + "/100", lente: "riesgo", micro: true, soloMicro: true, g: "lentes" },
     ] },
 };
 // Lentes: cada componente es el percentil del microbarrio dentro de su comuna; dir −1 invierte (más bajo = mejor).
 const LENTES = {
-  comprador: { rampa: "verde", alto: "Más favorables", bajo: "Menos favorables",
-    texto: "Alto = dentro de su comuna, el precio por cada peso de avalúo y por m² es bajo y el alza de contribuciones 2027 es menor. Útil para buscar dónde mirar; no predice plusvalía (la brecha no la predijo en la réplica R1).",
-    comps: E => [["bre_nivel_2426", -1, "Precio/avalúo bajo", nf.r2], ["uf_m2_mediano_2426", -1, "UF/m² bajo", nf.uf], [`r27_${E}_alza_anual_mediana`, -1, "Alza 2027 baja", nf.clp]] },
-  reclamo: { rampa: "naranja", alto: "Más base para reclamar", bajo: "Menos base",
-    texto: "Alto = el avalúo fiscal pesa más frente al precio de venta que en el resto de la comuna: más base para un reclamo de avalúo ante el SII.",
-    comps: E => [["rec_aval_precio_mediano", 1, "Avalúo/precio alto", nf.r2]] },
-  riesgo: { rampa: "rojo", alto: "Más expuestos", bajo: "Menos expuestos",
-    texto: "Alto = el alza de contribuciones del escenario elegido golpea más que en el resto de la comuna (monto mediano y % de viviendas con alza > $200 mil/año).",
-    comps: E => [[`r27_${E}_alza_anual_mediana`, 1, "Alza anual mediana", nf.clp], [`r27_${E}_pct_alza_200k`, 1, "% con alza > $200 mil", nf.pct]] },
+  comprador: { rampa: "verde", nombre: "Para comprar", alto: "Más atractivos", bajo: "Menos atractivos",
+    texto: "Puntaje alto: comparado con el resto de la comuna, aquí pagas menos por cada peso de avalúo y por m², y el alza 2027 sería menor. Te dice dónde mirar; no predice si el precio va a subir.",
+    comps: E => [["bre_nivel_2426", -1, "Precio ÷ avalúo", nf.r2], ["uf_m2_mediano_2426", -1, "Precio por m²", nf.uf], [`r27_${E}_alza_anual_mediana`, -1, "Alza 2027", nf.clp]] },
+  reclamo: { rampa: "naranja", nombre: "Para reclamar", alto: "Más base para reclamar", bajo: "Menos base",
+    texto: "Puntaje alto: aquí el avalúo del SII está más cerca del precio de venta que en el resto de la comuna. Hay más base para pedir una revisión del avalúo.",
+    comps: E => [["rec_aval_precio_mediano", 1, "Avalúo ÷ precio", nf.r2]] },
+  riesgo: { rampa: "rojo", nombre: "Riesgo 2027", alto: "Más expuestos", bajo: "Menos expuestos",
+    texto: "Puntaje alto: con el escenario elegido, aquí el alza de contribuciones golpearía más fuerte que en el resto de la comuna.",
+    comps: E => [[`r27_${E}_alza_anual_mediana`, 1, "Alza típica", nf.clp], [`r27_${E}_pct_alza_200k`, 1, "% con alza > $200 mil", nf.pct]] },
 };
-const ESCS = [["s0", "S0 · +1%"], ["s2", "S2 · medio"], ["s1", "S1 · +26%"]];
+const ESCS = [["s0", "Leve · +1%"], ["s2", "Moderado"], ["s1", "Fuerte · +26%"]];
+const escNombre = () => ESCS.find(e => e[0] === st.esc)[1];
+
+// ---- Glosario: íconos y explicaciones en lenguaje simple ----
+const ICONOS = {
+  casa: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+  calendario: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M12 13v5M9.5 15.5L12 13l2.5 2.5"/>',
+  tendencia: '<path d="M3 18l6-6 4 4 8-9"/><path d="M15 7h6v6"/>',
+  moneda: '<circle cx="12" cy="12" r="9"/><path d="M14.8 9.2c-.6-.8-1.6-1.2-2.8-1.2-1.7 0-2.8.9-2.8 2s1 1.7 2.8 2 2.8.9 2.8 2-1.1 2-2.8 2c-1.3 0-2.3-.5-2.9-1.3M12 6v12"/>',
+  pin: '<path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  balanza: '<path d="M12 4v16M7 20h10M5 7h14"/><path d="M5 7l-3 6a3 3 0 006 0zM19 7l-3 6a3 3 0 006 0z"/>',
+  documento: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 14l2 2 4-4"/>',
+  escalera: '<path d="M4 20h4v-4h4v-4h4V8h4"/><path d="M4 20V8"/>',
+  dispersion: '<circle cx="6" cy="16" r="1.6"/><circle cx="10" cy="9" r="1.6"/><circle cx="15" cy="14" r="1.6"/><circle cx="18" cy="6" r="1.6"/><path d="M3 20h18"/>',
+  grafico: '<path d="M4 20h16"/><path d="M7 16v-4M12 16V7M17 16v-6"/>',
+  uf: '<path d="M4 7h16v10H4z"/><path d="M8 10v2.5a2 2 0 004 0V10M14 14v-4h3M14 12h2"/>',
+  exenta: '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
+  lupa: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/><path d="M8.5 11h5M11 8.5v5"/>',
+  paleta: '<rect x="3" y="8" width="5" height="8" rx="1"/><rect x="9.5" y="8" width="5" height="8" rx="1"/><rect x="16" y="8" width="5" height="8" rx="1"/>',
+  comparar: '<path d="M4 12h16"/><path d="M12 5v14" stroke-dasharray="2 2"/><path d="M7 9l-3 3 3 3M17 9l3 3-3 3"/>',
+  alerta: '<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
+};
+const icono = (n, cls = "ic") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONOS[n] || ICONOS.info}</svg>`;
+const GLOSARIO = {
+  avaluo: ["casa", "Avalúo fiscal", "Es el valor que el SII le asigna a tu propiedad para calcular las contribuciones. Suele estar bastante por debajo del precio de venta: en el Gran Santiago, una vivienda se vende en promedio a 1,7 veces su avalúo."],
+  reavaluo: ["calendario", "Reavalúo 2027", "Cada cuatro años el SII actualiza los avalúos de las viviendas. El próximo rige desde 2027. Si tu avalúo sube, pueden subir tus contribuciones. En el último (2022) los avalúos subieron 28% por sobre la inflación."],
+  escenario: ["tendencia", "Escenarios del reavalúo", "Todavía no se sabe cuánto subirá el SII los avalúos, así que mostramos tres casos. Leve (+1%): el SII casi no los cambia. Fuerte (+26%): repite lo que hizo en 2022. Moderado: un punto medio. Tómalos como un rango posible, no como un pronóstico."],
+  contribuciones: ["moneda", "Contribuciones", "Es el impuesto a las propiedades. Se paga en 4 cuotas al año y depende del avalúo fiscal. Los montos de esta página son anuales y en pesos de hoy. \"Típico\" es la mediana: la mitad de las viviendas está por encima y la otra mitad por debajo."],
+  exenta: ["exenta", "Vivienda exenta", "No paga contribuciones porque su avalúo está bajo el monto exento que fija la ley. Si el reavalúo sube su avalúo por sobre ese monto, empieza a pagar."],
+  microbarrio: ["pin", "Microbarrio", "Un grupo de manzanas vecinas con valor de suelo parecido; en promedio, unas mil viviendas. Muestra diferencias que el promedio de la comuna esconde. Los contornos del mapa son aproximados: los dibujamos a partir de direcciones reales mientras el SII entrega su cartografía oficial. Los que se ven semitransparentes tienen una ubicación estimada."],
+  brecha: ["balanza", "Precio vs. avalúo", "Cuántas veces el precio de venta supera al avalúo fiscal. Un 1,7 significa que una vivienda con avalúo de $100 millones se vendió en $170 millones. Cuando esta razón crece, el SII suele subir más los avalúos en el siguiente reavalúo."],
+  reclamo: ["documento", "Reclamar el avalúo", "Si crees que el SII tasó tu propiedad por sobre lo que corresponde, puedes pedirle una revisión. Donde el avalúo está muy cerca del precio real hay más base para hacerlo. Esta página no evalúa casos individuales: revisa los datos de tu propiedad en sii.cl."],
+  prd: ["escalera", "Regresividad (PRD)", "Mide si las viviendas baratas quedan tasadas, en proporción, más caras que las caras. Lo ideal está entre 0,98 y 1,03. En el Gran Santiago va de 1,10 a 1,32: las viviendas más económicas cargan, en proporción, un avalúo más alto."],
+  cod: ["dispersion", "Disparidad (COD)", "Mide qué tan parejos son los avalúos entre viviendas parecidas. Bajo 15 es bueno; más alto significa avalúos desiguales y, por lo tanto, más casos que podrían reclamar."],
+  spar: ["grafico", "Cambio de precios", "Cuánto cambiaron los precios de las viviendas usadas, descontada la inflación. Comparamos el precio de cada venta con el avalúo de esa misma propiedad para no confundir \"subió el precio\" con \"se vendieron casas más caras\". Los puntos sobre el mapa marcan comunas donde el cambio es tan pequeño que podría ser cero."],
+  uf: ["uf", "UF", "La Unidad de Fomento se reajusta con la inflación. Expresar los precios en UF permite comparar años distintos sin que la inflación los distorsione."],
+  lentes: ["lupa", "Lentes de oportunidad", "Tres formas de mirar los microbarrios de una comuna según lo que buscas: comprar, reclamar tu avalúo o anticipar el alza 2027. El puntaje va de 0 a 100 y compara cada microbarrio con el resto de su comuna. Ojo: no predice cuánto subirá una propiedad. Lo probamos con datos de todo Santiago y la diferencia entre precio y avalúo no lo anticipa."],
+  cuantiles: ["paleta", "¿Cómo se pintan los colores?", "Por defecto, cada color agrupa la misma cantidad de zonas. Así siempre ves contraste, aunque los valores sean parecidos. \"Continua\" pinta en proporción al valor. \"Fija\" usa la misma escala para todo Santiago y sirve para comparar entre comunas. Si 40% o más de las zonas tienen exactamente el mismo valor (por ejemplo, 0%), van en gris."],
+  mediana: ["comparar", "Frente a lo típico de la comuna", "Muestra cuánto se aleja cada microbarrio del microbarrio típico (la mediana) de su comuna. Rojo: por encima. Azul: por debajo. Sirve para encontrar las excepciones dentro de una comuna pareja."],
+  n30: ["alerta", "Datos insuficientes", "Si una zona tuvo menos de 30 ventas entre 2024 y 2026, no mostramos sus indicadores de precio porque serían poco confiables. Se ve con rayas grises."],
+};
+const info = (k, txt) => (GLOSARIO[k] ? `<button type="button" class="info" data-g="${k}" aria-label="Qué significa: ${GLOSARIO[k][1]}" title="${GLOSARIO[k][1]}">${icono(GLOSARIO[k][0])}${txt ? `<span>${txt}</span>` : ""}</button>` : "");
 
 const st = { unidad: "comuna", capa: "reavaluo", esc: "s1", m: 0, escala: "cuant", rel: false, foco: null, sel: null, cmp: null, selMicro: null, sortKey: "valor", sortDir: -1, t: d3.zoomIdentity };
 let MGEO = null; // geometría aproximada de microbarrios
@@ -412,6 +478,7 @@ function asegurarMetricaMicro(preferirSensible) {
 }
 document.addEventListener("keydown", ev => {
   if (ev.key !== "Escape" || ev.target.matches("input, select, textarea")) return;
+  if (!document.getElementById("pop").hidden) { cerrarPop(); return; }
   if (st.selMicro) { st.selMicro = null; pintar(); } else if (st.foco) salir();
 });
 function visibles() {
@@ -488,25 +555,25 @@ function migas() {
   if (!st.foco) { el.attr("hidden", true).html(""); return; }
   el.attr("hidden", null).html("");
   el.append("button").attr("class", "btn").text("← Gran Santiago").on("click", salir);
-  el.append("span").html(`Gran Santiago › <strong>${byCut.get(st.foco).nombre}</strong> · ${microDatos().filter(r => r.cut === st.foco).length} microbarrios · clic en otra comuna gris para saltar a ella`);
+  el.append("span").html(`Gran Santiago › <strong>${byCut.get(st.foco).nombre}</strong> · ${microDatos().filter(r => r.cut === st.foco).length} microbarrios · toca otra comuna gris para cambiar`);
 }
 function fmtV(v) {
   const m = metrica();
   if (v == null) return "sin datos suficientes";
-  if (relActivo()) return (v > 0 ? "+" : "") + es.format(".1f")(v) + (m.relPp ? " pp" : "%") + " vs mediana comunal";
+  if (relActivo()) return (v > 0 ? "+" : "") + es.format(".1f")(v) + (m.relPp ? " pp" : "%") + " vs. lo típico de la comuna";
   return m.f(v);
 }
 const fmtCorte = v => { const m = metrica(); if (m.lente) return es.format(".0f")(v); return relActivo() ? (v > 0 ? "+" : "") + es.format(".0f")(v) + (m.relPp ? " pp" : "%") : m.f(v); };
 function leyenda() {
   const m = metrica(), el = d3.select("#leyenda"); el.html("");
   const meta = el.append("div").attr("class", "meta");
-  meta.append("span").html(`<strong>${m.t}${relActivo() ? " · frente a la mediana de su comuna" : ""}</strong>`);
+  meta.append("span").html(`<strong>${m.t}${relActivo() ? " · comparado con lo típico de su comuna" : ""}</strong>`);
   const u = st.unidad === "micro" ? "microbarrios" : "comunas";
   const ambito = st.foco ? `${nVis} microbarrios de ${byCut.get(st.foco).nombre}` : st.escala === "fija" ? `todo el Gran Santiago` : `${nVis} ${u} visibles`;
-  meta.append("span").text(m.lente ? "Percentil dentro de su comuna (0–100)" : escala.tipo === "cuant" ? `Cuantiles: cada color reúne la misma cantidad · ${ambito}` : escala.tipo === "cont" ? `Escala continua${escala.log ? " logarítmica" : ""} · ${ambito}` : escala.tipo === "umbral" ? `Divergente en torno a 0 · ${ambito}` : "");
+  meta.append("span").html((m.lente ? "Puntaje 0–100 dentro de su comuna" : escala.tipo === "cuant" ? `Cada color reúne la misma cantidad de ${u} · ${ambito}` : escala.tipo === "cont" ? `Color proporcional al valor${escala.log ? " (escala logarítmica)" : ""} · ${ambito}` : escala.tipo === "umbral" ? `Azul: menos · Rojo: más · ${ambito}` : "") + " " + info("cuantiles"));
   if (escala.sinVariacion) {
     const av = el.append("div").attr("class", "aviso").html(`Todos los ${u} a la vista tienen el mismo valor (${m.f(escala.empate.v)}): este indicador no distingue aquí. `);
-    if (st.capa === "reavaluo") av.append("button").attr("class", "btn").text("Cambiar a: alza anual mediana").on("click", () => { st.m = 3; controles(); pintar(); });
+    if (st.capa === "reavaluo") av.append("button").attr("class", "btn").text("Ver mejor: alza típica de la contribución").on("click", () => { st.m = 3; controles(); pintar(); });
     else av.append("button").attr("class", "btn").text("Ver lente comprador").on("click", () => { st.capa = "oportunidades"; st.m = 0; if (st.unidad !== "micro") st.unidad = "micro"; controles(); pintar(); });
   }
   const lw = 300, lh = 12;
@@ -524,9 +591,9 @@ function leyenda() {
     c.forEach((v, i) => { if ((i % paso && i !== k) || (paso > 1 && i === k - 1)) return; s.append("text").attr("x", 15 + i * bw - (i === k ? 2 : 0)).attr("y", 31).attr("text-anchor", i === 0 ? "start" : i === k ? "end" : "middle").text(fmtCorte(v)); });
   }
   const keys = el.append("div").attr("class", "keys");
-  if (escala.empate && !escala.sinVariacion) keys.append("span").html(`<span class="swatch" style="background:${NEUTRO()}"></span>= ${m.f(escala.empate.v)}: ${escala.empate.n} ${u} (empatados)`);
-  keys.append("span").html('<span class="swatch" style="background:var(--surface);background-image:repeating-linear-gradient(45deg,var(--hatch) 0 2px,transparent 2px 6px)"></span>Sin datos suficientes (n &lt; 30)');
-  if (st.unidad === "micro") keys.append("span").html('<span class="swatch" style="background:var(--accent);opacity:.5"></span>Semitransparente: ubicación interpolada');
+  if (escala.empate && !escala.sinVariacion) keys.append("span").html(`<span class="swatch" style="background:${NEUTRO()}"></span>= ${m.f(escala.empate.v)}: ${escala.empate.n} ${u} con el mismo valor (en gris)`);
+  keys.append("span").html('<span class="swatch" style="background:var(--surface);background-image:repeating-linear-gradient(45deg,var(--hatch) 0 2px,transparent 2px 6px)"></span>Pocas ventas (menos de 30) ' + info("n30"));
+  if (st.unidad === "micro") keys.append("span").html('<span class="swatch" style="background:var(--accent);opacity:.5"></span>Semitransparente: ubicación estimada ' + info("microbarrio"));
   if (m.ic && st.unidad === "comuna") keys.append("span").html('<span class="swatch" style="background:radial-gradient(var(--ink) 1px,transparent 1.4px) 0 0/5px 5px"></span>No distinguible de 0 (IC 95%)');
   if (escala.tipo === "cont") keys.append("span").text("Valores fuera de p2–p98 se muestran en el color extremo");
 }
@@ -565,23 +632,23 @@ function rango(k, v) {
   return `${vals.indexOf(v) + 1} de ${vals.length}`;
 }
 const FICHA = [
-  ["Reavalúo 2027 (escenario elegido)", () => [
-    ["% viviendas con alza > $200 mil/año", `r27_${st.esc.toUpperCase()}_pct_alza_200k`, nf.pct],
-    ["Alza mediana del avalúo", `r27_${st.esc.toUpperCase()}_alza_avaluo_pct`, nf.pct],
-    ["Viviendas que pasan a pagar", `r27_${st.esc.toUpperCase()}_pasan_a_pagar`, nf.int],
-    ["Alza anual mediana (las que suben)", `r27_${st.esc.toUpperCase()}_alza_anual_mediana`, nf.clp],
+  ["Contribuciones 2027", "reavaluo", () => [
+    ["% de viviendas con alza mayor a $200 mil al año", `r27_${st.esc.toUpperCase()}_pct_alza_200k`, nf.pct],
+    ["Alza típica del avalúo", `r27_${st.esc.toUpperCase()}_alza_avaluo_pct`, nf.pct],
+    ["Viviendas que dejarían de estar exentas", `r27_${st.esc.toUpperCase()}_pasan_a_pagar`, nf.int],
+    ["Alza típica de la contribución anual", `r27_${st.esc.toUpperCase()}_alza_anual_mediana`, nf.clp],
   ]],
-  ["Avalúo frente al precio", () => [
-    ["Avalúo/precio mediano 2024–26", "rec_aval_precio_mediano", nf.r2],
-    ["PRD (regresividad)", "rec_prd", nf.r2],
-    ["Precio/avalúo 2024–26", "bre_nivel_2426", nf.r2],
-    ["Cambio de la brecha desde 2022–23", "bre_cambio_pct", nf.pp],
+  ["Avalúo frente al precio", "brecha", () => [
+    ["Avalúo ÷ precio de venta (típico)", "rec_aval_precio_mediano", nf.r2],
+    ["Regresividad (PRD · ideal 0,98–1,03)", "rec_prd", nf.r2],
+    ["Precio de venta ÷ avalúo (típico)", "bre_nivel_2426", nf.r2],
+    ["Cambio de esa razón desde 2022–23", "bre_cambio_pct", nf.pp],
   ]],
-  ["Mercado y contribuciones", () => [
-    ["Retorno 2022 → 2025 (UF)", "mer_ret_22_25_pct", nf.pp],
-    ["UF por m² (mediana)", "mer_uf_m2", nf.uf],
-    ["% viviendas exentas", "con_pct_exentas", nf.pct],
-    ["Contribución anual mediana (afectas)", "con_anual_mediana_afectas", nf.clp],
+  ["Precios y contribuciones hoy", "spar", () => [
+    ["Cambio de precios 2022 → 2025 (UF)", "mer_ret_22_25_pct", nf.pp],
+    ["Precio por m² (UF, típico)", "mer_uf_m2", nf.uf],
+    ["% de viviendas que no pagan (exentas)", "con_pct_exentas", nf.pct],
+    ["Contribución anual típica (las que pagan)", "con_anual_mediana_afectas", nf.clp],
   ]],
 ];
 function ficha() {
@@ -589,9 +656,10 @@ function ficha() {
   if (st.unidad === "micro") return st.foco && !st.selMicro ? fichaFoco(el) : fichaMicro(el);
   if (!st.sel) {
     const top = [...DATA.comunas].filter(c => valor(c) != null).sort((a, b) => valor(b) - valor(a)).slice(0, 3);
-    el.append("div").attr("class", "empty").html(`<span class="eyebrow">Ficha comunal</span><h2>Elige una comuna en el mapa</h2>
-      <p><strong>Clic</strong> en una comuna: el mapa se acerca y la pinta por microbarrio, con la escala de color recalculada solo para ella. <strong>Mayús+clic</strong>: ficha comunal sin zoom; Mayús+clic en otra para compararlas.</p>
-      <p class="hint">Más altas en “${metrica().t}”: ${top.map(c => `<button class="btn" data-cut="${c.cut}" style="margin:2px 4px 2px 0">${c.nombre}</button>`).join("")}</p>`);
+    el.append("div").attr("class", "empty").html(`<span class="eyebrow">Ficha comunal</span><h2>Toca tu comuna en el mapa</h2>
+      <p>El mapa se acerca y la divide en microbarrios ${info("microbarrio")}, cada uno con su color. Así ves qué zonas de tu comuna están mejor o peor que el resto.</p>
+      <p class="hint">¿Quieres comparar dos comunas? Mayús+clic en una y luego en otra.</p>
+      <p class="hint">Las más altas en “${metrica().t}”: ${top.map(c => `<button class="btn" data-cut="${c.cut}" style="margin:2px 4px 2px 0">${c.nombre}</button>`).join("")}</p>`);
     el.selectAll("button[data-cut]").on("click", function () { seleccionar(this.dataset.cut, false); });
     return;
   }
@@ -603,7 +671,7 @@ function fichaComuna(el, embebida) {
   const head = el.append("div").attr("class", "head");
   head.append("div").html(`<span class="eyebrow">Ficha comunal${b ? " · comparación" : ""}</span><h2>${a.nombre}${b ? ` <span style="color:var(--ink-3);font-weight:500">vs</span> ${b.nombre}` : ""}</h2><p class="hint">${nf.int(a.viviendas)} viviendas${b ? ` · ${nf.int(b.viviendas)}` : ""} · ${nf.int(a.n_ventas_2426 || 0)} ventas 2024–26</p>`);
   const acc = head.append("div").style("display", "flex").style("gap", "6px");
-  acc.append("button").attr("class", "btn").text("Ver microbarrios").on("click", () => enfocar(st.sel));
+  acc.append("button").attr("class", "btn").text("Ver sus microbarrios").on("click", () => enfocar(st.sel));
   acc.append("button").attr("class", "btn").text("Cerrar").on("click", () => { st.sel = null; st.cmp = null; pintar(); });
 
   if (!b) {
@@ -620,8 +688,8 @@ function fichaComuna(el, embebida) {
   DATA.comunas.filter(c => c.cut !== st.sel).forEach(c => cs.append("option").attr("value", c.cut).property("selected", c.cut === st.cmp).text(c.nombre));
   cs.on("change", function () { st.cmp = this.value || null; pintar(); });
   }
-  FICHA.forEach(([titulo, filas]) => {
-    el.append("h3").text(titulo);
+  FICHA.forEach(([titulo, g, filas]) => {
+    el.append("h3").html(`${info(g)} ${titulo}${g === "reavaluo" ? " · escenario " + escNombre() : ""}`);
     const t = el.append("table").attr("class", "cmp-table");
     t.append("thead").html(`<tr><th>Indicador</th><th class="num">${a.nombre}</th>${b ? `<th class="num">${b.nombre}</th>` : '<th class="num">Ranking</th>'}</tr>`);
     const tb = t.append("tbody");
@@ -630,10 +698,10 @@ function fichaComuna(el, embebida) {
       tb.append("tr").html(`<td>${lbl}</td><td class="num">${va == null ? "—" : f(va)}</td><td class="num">${b ? (vb == null ? "—" : f(vb)) : rango(k, va)}</td>`);
     });
   });
-  el.append("h3").text("Precio/avalúo mediano por año");
-  sparkline(el, DATA.series[a.cut]?.brecha, b ? DATA.series[b.cut]?.brecha : null, v => nf.r2(v), "El reavalúo 2022 corta la serie: los avalúos nuevos bajan la razón.");
-  el.append("h3").text("Índice de precios SPAR (2010 = 100, en UF)");
-  sparkline(el, DATA.series[a.cut]?.spar, b ? DATA.series[b.cut]?.spar : null, v => es.format(".0f")(v), b ? `Línea continua: ${a.nombre}; segmentada: ${b.nombre}.` : "Ventas de segunda mano; precio dividido por un avalúo fijo de referencia.");
+  el.append("h3").html(`${info("brecha")} Precio ÷ avalúo, año a año`);
+  sparkline(el, DATA.series[a.cut]?.brecha, b ? DATA.series[b.cut]?.brecha : null, v => nf.r2(v), "La caída de 2022 es el reavalúo: los avalúos subieron y la razón bajó.");
+  el.append("h3").html(`${info("spar")} Precios de viviendas usadas (2010 = 100, en UF)`);
+  sparkline(el, DATA.series[a.cut]?.spar, b ? DATA.series[b.cut]?.spar : null, v => es.format(".0f")(v), b ? `Línea continua: ${a.nombre}; segmentada: ${b.nombre}.` : "100 = nivel de 2010. Sobre 100: los precios subieron más que la inflación.");
 }
 function sparkline(el, sa, sb, f, nota) {
   if (!sa || sa.length < 2) { el.append("p").attr("class", "hint").text("Sin datos suficientes."); return; }
@@ -793,19 +861,19 @@ function fichaFoco(el) {
   const a = byCut.get(st.foco), m = metrica(), L = m.lente ? LENTES[m.lente] : null;
   const filas = microDatos().filter(r => r.cut === st.foco);
   const head = el.append("div").attr("class", "head");
-  head.append("div").html(`<span class="eyebrow">Comuna · ${filas.length} microbarrios</span><h2>${a.nombre}</h2><p class="hint">${nf.int(a.viviendas)} viviendas · ${nf.int(a.n_ventas_2426 || 0)} ventas 2024–26</p>`);
+  head.append("div").html(`<span class="eyebrow">Tu comuna · ${filas.length} microbarrios ${info("microbarrio")}</span><h2>${a.nombre}</h2><p class="hint">${nf.int(a.viviendas)} viviendas · ${nf.int(a.n_ventas_2426 || 0)} ventas 2024–26</p>`);
   head.append("div").append("button").attr("class", "btn").text("← Gran Santiago").on("click", salir);
-  if (L) el.append("p").attr("class", "aviso").text(L.texto);
-  else el.append("p").attr("class", "hint").text(`Color: ${m.t}${relActivo() ? ", frente a la mediana de la comuna" : ""}. Escala calculada solo con los microbarrios de ${a.nombre}.`);
+  if (L) el.append("p").attr("class", "aviso").html(`<strong>${L.nombre}.</strong> ${L.texto} ${info("lentes", "¿Cómo se calcula?")}`);
+  else el.append("p").attr("class", "hint").html(`Color: ${m.t}${relActivo() ? ", comparado con lo típico de la comuna" : ""}. Los colores se calculan solo con los microbarrios de ${a.nombre}. ${info(m.g)}`);
   const con = filas.map(r => ({ r, v: valorMicro(r) })).filter(d => d.v != null).sort((x, y) => y.v - x.v);
   if (!con.length || escala.sinVariacion) {
     const av = el.append("p").attr("class", "aviso").text(con.length ? `Todos los microbarrios de ${a.nombre} tienen ${m.f(con[0].v)} en este indicador: no distingue aquí. ` : "Sin datos suficientes por microbarrio para este indicador. ");
-    if (st.capa === "reavaluo" && st.m !== 3) av.append("button").attr("class", "btn").text("Cambiar a: alza anual mediana").on("click", () => { st.m = 3; controles(); pintar(); });
+    if (st.capa === "reavaluo" && st.m !== 3) av.append("button").attr("class", "btn").text("Ver mejor: alza típica de la contribución").on("click", () => { st.m = 3; controles(); pintar(); });
     const det = el.append("details"); det.append("summary").text("Ficha comunal completa"); fichaComuna(det.append("div").attr("class", "ficha-in"), true);
     return;
   }
   // Distribución: un bar por microbarrio, ordenado de mayor a menor (sirve de leyenda y de selector)
-  el.append("h3").text("Todos sus microbarrios, de mayor a menor");
+  el.append("h3").text("Sus microbarrios, de mayor a menor (toca una barra)");
   const w = 360, h = 70, bw = w / con.length;
   const ext = d3.extent(con, d => d.v), y0 = Math.min(0, ext[0]), y1 = Math.max(0, ext[1]);
   const y = d3.scaleLinear().domain([y0, y1 === y0 ? y0 + 1 : y1]).range([h - 2, 2]);
@@ -832,10 +900,9 @@ function fichaMicro(el) {
   const r = st.selMicro ? byMicro.get(st.selMicro) : null;
   if (!r) {
     const vis = microVisibles().filter(x => valorMicro(x) != null).sort((a, b) => valorMicro(b) - valorMicro(a)).slice(0, 5);
-    el.append("div").attr("class", "empty").html(`<span class="eyebrow">Microbarrios · Gran Santiago</span><h2>Elige una comuna o un microbarrio</h2>
-      <p>Cada polígono agrupa manzanas SII consecutivas con valor de suelo similar. Clic en un microbarrio para ver su ficha y su comuna.</p>
-      <p><span class="badge">Geometría aproximada</span> Celdas de Voronoi en torno a direcciones geocodificadas; las semitransparentes tienen ubicación interpolada.</p>
-      <p class="hint">Más altos a la vista en “${metrica().t}”:</p>`);
+    el.append("div").attr("class", "empty").html(`<span class="eyebrow">Microbarrios · Gran Santiago</span><h2>Toca un microbarrio</h2>
+      <p>Cada zona del mapa es un microbarrio ${info("microbarrio")}: manzanas vecinas con valor de suelo parecido. Al tocar uno ves su ficha y cómo se compara con el resto de su comuna.</p>
+      <p class="hint">Los más altos a la vista en “${metrica().t}”:</p>`);
     const t = el.append("table").attr("class", "cmp-table");
     vis.forEach(x => t.append("tr").style("cursor", "pointer").html(`<td>${byCut.get(x.cut).nombre} · mz ${x.mz_min}–${x.mz_max}</td><td class="num">${fmtV(valorMicro(x))}</td>`).on("click", () => elegirMicro(x.id, true)));
     return;
@@ -848,28 +915,28 @@ function fichaMicro(el) {
   acc.append("button").attr("class", "btn").text(`← ${c.nombre}`).on("click", () => { st.selMicro = null; pintar(); if (st.foco) encuadrar(st.foco); });
   const E = st.esc.toUpperCase();
   // Lentes: puntaje y componentes (percentil en su comuna)
-  el.append("h3").text(`Lentes de oportunidad · escenario ${E}`);
+  el.append("h3").html(`${info("lentes")} Lentes de oportunidad · escenario ${escNombre()}`);
   const tl = el.append("table").attr("class", "cmp-table");
-  tl.append("thead").html('<tr><th>Lente</th><th class="num">Puntaje</th><th>Componentes (percentil en su comuna)</th></tr>');
+  tl.append("thead").html('<tr><th>Lente</th><th class="num">Puntaje</th><th>De qué se compone (puntaje de cada parte, 0–100)</th></tr>');
   Object.entries(LENTES).forEach(([nombre, L]) => {
     const x = lente(nombre).get(r.id), comps = L.comps(E);
     const det = comps.map(([k, , lbl, fm], i) => `${lbl}: ${r[k] == null && !/alza_anual/.test(k) ? "—" : fm(compVal(r, k))} <span style="color:var(--ink-3)">(${x && x.comps[i] != null ? es.format(".0f")(x.comps[i]) : "—"})</span>`).join("<br>");
-    tl.append("tr").html(`<td>${CAPAS.oportunidades.metricas.find(mm => mm.lente === nombre).t.split(":")[0]}</td><td class="num">${x && x.score != null ? es.format(".0f")(x.score) : "—"}</td><td style="font-size:.78rem">${det}</td>`);
+    tl.append("tr").html(`<td>${L.nombre}</td><td class="num">${x && x.score != null ? es.format(".0f")(x.score) : "—"}</td><td style="font-size:.78rem">${det}</td>`);
   });
-  el.append("p").attr("class", "hint").text("Posición relativa dentro de la comuna; no predice plusvalía.");
+  el.append("p").attr("class", "hint").text("Puntajes comparados con el resto de su comuna. No predicen si el precio va a subir.");
   const pares = filas => {
     const enCom = microDatos().filter(x => x.cut === r.cut);
     const pos = (k, v) => { const vs = enCom.map(x => x[k]).filter(x => x != null).sort((a, b) => b - a); return v == null ? "" : `${vs.indexOf(v) + 1} de ${vs.length}`; };
     const t = el.append("table").attr("class", "cmp-table");
-    t.append("thead").html(`<tr><th>Indicador</th><th class="num">Microbarrio</th><th class="num">Mediana comuna</th><th class="num">En su comuna</th></tr>`);
+    t.append("thead").html(`<tr><th>Indicador</th><th class="num">Microbarrio</th><th class="num">Típico en la comuna</th><th class="num">Lugar en su comuna</th></tr>`);
     const tb = t.append("tbody");
     filas.forEach(([lbl, k, fm]) => { const md = d3.median(enCom, x => compVal(x, k)); const vr = compVal(r, k); tb.append("tr").html(`<td>${lbl}</td><td class="num">${vr == null ? "—" : fm(vr)}</td><td class="num">${md == null ? "—" : fm(md)}</td><td class="num">${pos(k, r[k])}</td>`); });
   };
-  el.append("h3").text(`Reavalúo 2027 · escenario ${E}`);
-  pares([["% viviendas con alza > $200 mil/año", `r27_${E}_pct_alza_200k`, nf.pct], ["Alza anual mediana (las que suben)", `r27_${E}_alza_anual_mediana`, nf.clp]]);
-  el.append("h3").text("Precio y avalúo (ventas 2024–26)");
-  pares([["Avalúo/precio mediano", "rec_aval_precio_mediano", nf.r2], ["Precio/avalúo mediano", "bre_nivel_2426", nf.r2], ["Cambio de la brecha desde 2022–23", "bre_cambio_pct", nf.pp], ["UF por m² (mediana)", "uf_m2_mediano_2426", nf.uf]]);
-  el.append("p").attr("class", "hint").html(`Verifica su ubicación exacta en <a href="https://www4.sii.cl/mapasui/internet/" target="_blank" rel="noopener">SII Mapas</a>: comuna ${c.nombre}, capa Manzanas, números ${r.mz_min} a ${r.mz_max}. Indicadores de ventas ocultos con menos de 30 ventas.`);
+  el.append("h3").html(`${info("contribuciones")} Contribuciones 2027 · escenario ${escNombre()}`);
+  pares([["% de viviendas con alza mayor a $200 mil al año", `r27_${E}_pct_alza_200k`, nf.pct], ["Alza típica de la contribución anual", `r27_${E}_alza_anual_mediana`, nf.clp]]);
+  el.append("h3").html(`${info("brecha")} Precio y avalúo (ventas 2024–2026)`);
+  pares([["Avalúo ÷ precio de venta", "rec_aval_precio_mediano", nf.r2], ["Precio de venta ÷ avalúo", "bre_nivel_2426", nf.r2], ["Cambio de esa razón desde 2022–23", "bre_cambio_pct", nf.pp], ["Precio por m² (UF)", "uf_m2_mediano_2426", nf.uf]]);
+  el.append("p").attr("class", "hint").html(`¿Quieres ubicarlo con precisión? Abre <a href="https://www4.sii.cl/mapasui/internet/" target="_blank" rel="noopener">SII Mapas</a>, elige ${c.nombre} y la capa Manzanas, y busca los números ${r.mz_min} a ${r.mz_max}.`);
 }
 function rankingMicro() {
   const m = metrica(), t = d3.select("#ranking"); t.html("");
@@ -902,7 +969,7 @@ function rankingMicro() {
 // ---- Ranking ----
 function ranking() {
   if (st.unidad === "micro") return rankingMicro();
-  d3.select("#t-rank").text("Comunas por indicador seleccionado");
+  d3.select("#t-rank").text("Ranking de comunas");
   const m = metrica(), t = d3.select("#ranking"); t.html("");
   const filas = DATA.comunas.map(c => ({ cut: c.cut, nombre: c.nombre, valor: valor(c), viviendas: c.viviendas, ic: m.ic ? c[m.ic] : null }));
   filas.sort((a, b) => { const k = st.sortKey; const va = a[k], vb = b[k]; if (va == null) return 1; if (vb == null) return -1; return (va < vb ? -1 : va > vb ? 1 : 0) * st.sortDir; });
@@ -949,14 +1016,15 @@ function controles() {
   d3.select("#ctl-esc").attr("hidden", CAPAS[st.capa].escenario ? null : true);
   seg("esc", ESCS, st.esc, v => { st.esc = v; controles(); pintar(); });
   d3.select("#ctl-rel").attr("hidden", st.unidad === "micro" && !metrica().lente ? null : true);
-  seg("rel", [[false, "Valor"], [true, "Frente a mediana comunal"]], st.rel, v => { st.rel = v; controles(); pintar(); });
-  seg("escala", [["cuant", "Cuantiles"], ["cont", "Continua"], ["fija", "Fija (todo)"]], st.escala, v => { st.escala = v; controles(); pintar(); });
-  d3.selectAll("#escala button").attr("title", (d, i) => ["Cada color reúne la misma cantidad de unidades visibles (máximo contraste)", "Gradiente proporcional al valor (logarítmico en montos)", "Cuantiles sobre todo el Gran Santiago, sin ajustar al zoom"][i]);
+  seg("rel", [[false, "Valor"], [true, "vs. lo típico de la comuna"]], st.rel, v => { st.rel = v; controles(); pintar(); });
+  seg("escala", [["cuant", "Por grupos"], ["cont", "Continua"], ["fija", "Fija"]], st.escala, v => { st.escala = v; controles(); pintar(); });
+  d3.selectAll("#escala button").attr("title", (d, i) => ["Cada color reúne la misma cantidad de zonas visibles (máximo contraste)", "Color proporcional al valor", "La misma escala para todo Santiago, sin ajustarse al zoom"][i]);
   const sel = d3.select("#metrica"); sel.html("");
   metricasDe(st.capa).forEach(({ m, i }) => sel.append("option").attr("value", i).property("selected", i === st.m).text(m.t));
-  d3.select("#nota-capa").text(st.unidad === "micro"
-    ? (CAPAS[st.capa].soloMicro ? CAPAS[st.capa].nota + " " : "") + "Polígonos APROXIMADOS (direcciones geocodificadas y celdas de Voronoi) hasta recibir la cartografía oficial del SII."
-    : CAPAS[st.capa].nota);
+  const C = CAPAS[st.capa], gs = (st.unidad === "micro" ? ["microbarrio"] : []).concat(C.g || []);
+  d3.select("#nota-capa").html(`${C.nota} <span class="nota-links">${gs.map(k => info(k, GLOSARIO[k][1])).join("")}</span>`);
+  d3.select("#info-metrica").html(info(metrica().g));
+  d3.selectAll("[data-info]").html(function () { return info(this.dataset.info); });
 }
 d3.select("#metrica").on("change", function () { st.m = +this.value; controles(); pintar(); });
 d3.select("#lista-comunas").selectAll("option").data(DATA.comunas).join("option").attr("value", c => c.nombre);
@@ -998,6 +1066,30 @@ window.addEventListener("hashchange", () => { if (leerHash()) { controles(); pin
 // ---- Tema ----
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", pintar);
 new MutationObserver(pintar).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+// ---- Glosario: popover al tocar un ícono ----
+const pop = document.getElementById("pop");
+let popBtn = null;
+function abrirPop(btn) {
+  const [ic, tit, txt] = GLOSARIO[btn.dataset.g];
+  pop.innerHTML = `<div class="pop-h">${icono(ic, "ic-l")}<strong>${tit}</strong><button type="button" class="pop-x" aria-label="Cerrar">×</button></div><p>${txt}</p>`;
+  pop.hidden = false;
+  const r = btn.getBoundingClientRect(), w = Math.min(330, window.innerWidth - 24);
+  pop.style.width = w + "px";
+  pop.style.left = Math.min(Math.max(12, r.left + r.width / 2 - w / 2), window.innerWidth - w - 12) + "px";
+  const h = pop.offsetHeight;
+  pop.style.top = (r.bottom + 8 + h > window.innerHeight - 8 ? Math.max(8, r.top - h - 8) : r.bottom + 8) + "px";
+  if (popBtn) popBtn.setAttribute("aria-expanded", "false");
+  popBtn = btn; btn.setAttribute("aria-expanded", "true");
+}
+function cerrarPop() { if (pop.hidden) return; pop.hidden = true; if (popBtn) popBtn.setAttribute("aria-expanded", "false"); popBtn = null; }
+document.addEventListener("click", ev => {
+  const b = ev.target.closest(".info");
+  if (b) { ev.preventDefault(); ev.stopPropagation(); if (popBtn === b) cerrarPop(); else abrirPop(b); return; }
+  if (ev.target.closest(".pop-x") || !ev.target.closest("#pop")) cerrarPop();
+}, true);
+window.addEventListener("scroll", cerrarPop, { passive: true });
+window.addEventListener("resize", cerrarPop);
 
 // ---- Inicio ----
 if (!leerHash()) { try { const c = localStorage.getItem("atlas-capa"); if (c && CAPAS[c]) st.capa = c; } catch (e) {} }
