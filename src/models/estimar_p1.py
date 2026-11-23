@@ -9,6 +9,7 @@ Regresión: Y4 ~ brecha_rel + momentum | comuna×año, errores agrupados por bar
 Inferencia principal: permutación de brecha_rel entre barrios dentro de cada comuna×año (2.000 réplicas), bilateral.
 
 Salida: data/staging/_reportes/resultados_p1.json
+R1 (§9): réplica confirmatoria en las 33 comunas nuevas del Gran Santiago (sin las 3 piloto).
 Uso: python -m src.models.estimar_p1
 """
 
@@ -20,7 +21,7 @@ import warnings
 import numpy as np
 import polars as pl
 
-from src.etl.common import MARTS, REPORTES
+from src.etl.common import MARTS, PILOTO, REPORTES
 
 warnings.filterwarnings("ignore")
 R_PERM = 2000
@@ -97,9 +98,14 @@ def prueba(d: pl.DataFrame, semilla: int = 20261123) -> dict:
 
 def main() -> None:
     d = panel()
+    piloto = d.filter(pl.col("cod_comuna").is_in(list(PILOTO)))
+    nuevas = d.filter(~pl.col("cod_comuna").is_in(list(PILOTO)))
     res = {
-        "H1_1_confirmatoria_t_2018_2020": prueba(d.filter(pl.col("t") <= 2020)),
-        "H1_1_exploratoria_t_2021": prueba(d.filter(pl.col("t") == 2021)),
+        "H1_1_confirmatoria_t_2018_2020": prueba(piloto.filter(pl.col("t") <= 2020)),
+        "H1_1_exploratoria_t_2021": prueba(piloto.filter(pl.col("t") == 2021)),
+        "R1_replica_33_comunas_nuevas_t_2018_2020": prueba(nuevas.filter(pl.col("t") <= 2020)),
+        "R1_exploratoria_t_2021_comunas_nuevas": prueba(nuevas.filter(pl.col("t") == 2021)),
+        "exploratorio_gran_santiago_completo_t_2018_2020": prueba(d.filter(pl.col("t") <= 2020)),
         "H1_2": "Exploratoria hasta tener objetivos posteriores a 2025 (§4); no se estima en esta versión.",
     }
     (REPORTES / "resultados_p1.json").write_text(json.dumps(res, indent=2, ensure_ascii=False))

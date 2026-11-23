@@ -27,13 +27,23 @@ from .common import STAGING, Reporte
 DESTINO_PRINCIPAL = "H"
 
 
-def catalogo() -> tuple[pl.DataFrame, list[str]]:
-    """Roles de todos los semestres disponibles; atributos del semestre más reciente."""
+def catalogo(cod_comuna: int | None = None) -> tuple[pl.DataFrame, list[str]]:
+    """Roles de todos los semestres disponibles; atributos del semestre más reciente.
+
+    Lectura perezosa y solo con las columnas necesarias; con `cod_comuna` filtra antes de cargar (memoria).
+    """
     archivos = sorted((STAGING / "catastro").glob("roles_*.parquet"))
     semestres = [p.stem.removeprefix("roles_") for p in archivos]
-    roles = pl.concat([pl.read_parquet(p) for p in archivos], how="vertical_relaxed")
+    filtro = (pl.col("cod_comuna") == cod_comuna) if cod_comuna is not None else pl.lit(True)
+    roles = pl.concat(
+        [pl.scan_parquet(p).select("rol_id", "cod_comuna", "destino", "avaluo_total", "semestre").filter(filtro) for p in archivos],
+        how="vertical_relaxed",
+    )
     lineas = pl.concat(
-        [pl.read_parquet(p) for p in sorted((STAGING / "catastro").glob("lineas_*.parquet"))],
+        [
+            pl.scan_parquet(p).select("rol_id", "cod_comuna", "anio_construccion").filter(filtro)
+            for p in sorted((STAGING / "catastro").glob("lineas_*.parquet"))
+        ],
         how="vertical_relaxed",
     )
     anio = lineas.group_by("rol_id").agg(pl.col("anio_construccion").max().alias("anio_construccion_max"))
@@ -48,6 +58,7 @@ def catalogo() -> tuple[pl.DataFrame, list[str]]:
             pl.col("semestre").last().alias("ultimo_semestre"),
         )
         .join(anio, on="rol_id", how="left")
+        .collect()
     )
     return cat, semestres
 
@@ -56,8 +67,8 @@ def linaje(semestres: list[str]) -> pl.DataFrame:
     """Altas y bajas de roles entre semestres consecutivos (el histórico no trae rol padre)."""
     out = []
     for a, b in zip(semestres, semestres[1:]):
-        ra = pl.read_parquet(STAGING / "catastro" / f"roles_{a}.parquet").select("rol_id", "cod_comuna", "manzana")
-        rb = pl.read_parquet(STAGING / "catastro" / f"roles_{b}.parquet").select("rol_id", "cod_comuna", "manzana")
+        ra = pl.read_parquet(STAGING / "catastro" / f"roles_{a}.parquet", columns=["rol_id", "cod_comuna", "manzana"])
+        rb = pl.read_parquet(STAGING / "catastro" / f"roles_{b}.parquet", columns=["rol_id", "cod_comuna", "manzana"])
         out.append(rb.join(ra, on="rol_id", how="anti").with_columns(pl.lit("alta").alias("tipo")))
         out.append(ra.join(rb, on="rol_id", how="anti").with_columns(pl.lit("baja").alias("tipo")))
         out[-2] = out[-2].with_columns(pl.lit(a).alias("desde"), pl.lit(b).alias("hasta"))
@@ -141,18 +152,13 @@ def agrupar(tr: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFrame]:
     return tr, esc
 
 
-def main() -> None:
-    cat, semestres = catalogo()
-    comunas_cat = cat["cod_comuna"].unique().to_list()
-
-    rep = Reporte("fase2_match")
-    f = pl.read_parquet(STAGING / "f2890.parquet").filter(pl.col("cod_comuna").is_in(comunas_cat))
-    rep.entrada = f.height
+def procesar_comuna(cod: int) -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
+    """Cruce, obra nueva y agrupación para una comuna (las escrituras nunca cruzan comunas)."""
+    cat, _ = catalogo(cod)
+    f = pl.scan_parquet(STAGING / "f2890.parquet").filter(pl.col("cod_comuna") == cod).collect()
     tr = f.join(cat.drop("cod_comuna"), on="rol_id", how="left").with_columns(
         pl.col("primer_semestre").is_not_null().alias("match_catalogo")
     )
-
-    # Primera venta de obra nueva
     tr = tr.sort("fecha_escritura").with_columns(
         (pl.col("fecha_escritura") == pl.col("fecha_escritura").min().over("rol_id")).alias("es_primera_obs")
     ).with_columns(
@@ -162,43 +168,69 @@ def main() -> None:
             & (pl.col("fecha_escritura").dt.year() - pl.col("anio_construccion_max") <= 2)
         ).alias("primera_venta_obra_nueva")
     )
-
     con_precio = pl.col("monto_uf_norm") > 0
     anio = pl.col("fecha_escritura").dt.year()
-    tasa = (
-        tr.filter(con_precio)
-        .group_by("cod_comuna", anio.alias("anio"))
-        .agg(pl.col("match_catalogo").mean().alias("tasa_match"), pl.len().alias("n"))
-        .sort("cod_comuna", "anio")
+    tasa = tr.filter(con_precio).group_by("cod_comuna", anio.alias("anio")).agg(
+        pl.col("match_catalogo").sum().alias("n_match"), pl.len().alias("n")
     )
-    ventana = tr.filter(con_precio & anio.is_between(2020, 2023))
-    rep.notas["tasa_match_con_precio_2020_2023"] = round(ventana["match_catalogo"].mean(), 4)
-    rep.notas["tasa_match_con_precio_2020_2023_por_comuna"] = {
-        k: round(v, 4)
-        for k, v in ventana.group_by("cod_comuna").agg(pl.col("match_catalogo").mean()).iter_rows()
-    }
-    rep.notas["tasa_match_con_precio_todos_los_anios"] = round(tr.filter(con_precio)["match_catalogo"].mean(), 4)
-    tasa.write_csv(STAGING / "_reportes" / "fase2_tasa_match_por_anio.csv")
-
     tr, esc = agrupar(tr)
-    tr.write_parquet(STAGING / "fct_transferencia.parquet", compression="zstd")
-    rep.cerrar(tr.height)
+    return tr, esc, tasa
+
+
+def main() -> None:
+    import gc
+
+    comunas_cat = (
+        pl.scan_parquet(sorted((STAGING / "catastro").glob("roles_*.parquet"))[-1]).select("cod_comuna").unique().collect()["cod_comuna"].sort().to_list()
+    )
+    partes = STAGING / "_partes" / "escrituras"
+    partes.mkdir(parents=True, exist_ok=True)
+    for p in partes.glob("*.parquet"):
+        p.unlink()
+    tasas = []
+    for cod in comunas_cat:
+        tr, esc, tasa = procesar_comuna(cod)
+        tr.write_parquet(partes / f"tr_{cod}.parquet", compression="zstd")
+        esc.write_parquet(partes / f"esc_{cod}.parquet", compression="zstd")
+        tasas.append(tasa)
+        del tr, esc
+        gc.collect()
+
+    rep = Reporte("fase2_match")
+    pl.scan_parquet(partes / "tr_*.parquet").sink_parquet(STAGING / "fct_transferencia.parquet", compression="zstd")
+    tasa = pl.concat(tasas).sort("cod_comuna", "anio").with_columns((pl.col("n_match") / pl.col("n")).alias("tasa_match"))
+    tasa.write_csv(STAGING / "_reportes" / "fase2_tasa_match_por_anio.csv")
+    v = tasa.filter(pl.col("anio").is_between(2020, 2023))
+    rep.entrada = pl.scan_parquet(STAGING / "fct_transferencia.parquet").select(pl.len()).collect().item()
+    rep.notas["tasa_match_con_precio_2020_2023"] = round(v["n_match"].sum() / v["n"].sum(), 4)
+    rep.notas["comunas_con_match_2020_2023_<95pct"] = {
+        r["cod_comuna"]: round(r["t"], 4)
+        for r in v.group_by("cod_comuna").agg((pl.col("n_match").sum() / pl.col("n").sum()).alias("t")).filter(pl.col("t") < 0.95).iter_rows(named=True)
+    }
+    rep.notas["tasa_match_con_precio_todos_los_anios"] = round(tasa["n_match"].sum() / tasa["n"].sum(), 4)
+    rep.cerrar(rep.entrada)
 
     rep = Reporte("fase2_escrituras")
-    rep.entrada = tr.height
-    rep.descartar("anexo_no_asignable", tr.filter(pl.col("escritura_id").is_null()).height)
-    rep.descartar("agrupado_en_escritura", tr.filter(pl.col("escritura_id").is_not_null()).height - esc.height)
+    pl.scan_parquet(partes / "esc_*.parquet").sink_parquet(STAGING / "fct_escritura.parquet", compression="zstd")
+    tr_l = pl.scan_parquet(STAGING / "fct_transferencia.parquet")
+    esc = pl.read_parquet(STAGING / "fct_escritura.parquet", columns=["tipo_grupo", "regla_monto", "primera_venta_obra_nueva"])
+    rep.entrada = rep_n = tr_l.select(pl.len()).collect().item()
+    sin_esc = tr_l.filter(pl.col("escritura_id").is_null()).select(pl.len()).collect().item()
+    rep.descartar("anexo_no_asignable", sin_esc)
+    rep.descartar("agrupado_en_escritura", rep_n - sin_esc - esc.height)
     rep.notas["por_tipo_grupo"] = dict(esc.group_by("tipo_grupo").len().sort("len", descending=True).iter_rows())
     rep.notas["por_regla_monto"] = dict(esc.group_by("regla_monto").len().sort("len", descending=True).iter_rows())
-    rep.notas["primera_venta_obra_nueva"] = esc["primera_venta_obra_nueva"].sum()
-    esc.write_parquet(STAGING / "fct_escritura.parquet", compression="zstd")
+    rep.notas["primera_venta_obra_nueva"] = int(esc["primera_venta_obra_nueva"].sum())
     rep.cerrar(esc.height)
+    del esc
+    gc.collect()
 
     rep = Reporte("fase2_linaje")
+    semestres = [p.stem.removeprefix("roles_") for p in sorted((STAGING / "catastro").glob("roles_*.parquet"))]
     lin = linaje(semestres)
     rep.entrada = lin.height
     rep.notas["por_tipo"] = dict(lin.group_by("tipo").len().iter_rows())
-    rep.notas["en_manzanas_con_altas_y_bajas"] = lin["manzana_con_altas_y_bajas"].sum()
+    rep.notas["en_manzanas_con_altas_y_bajas"] = int(lin["manzana_con_altas_y_bajas"].sum())
     lin.write_parquet(STAGING / "map_rol_linaje.parquet", compression="zstd")
     rep.cerrar(lin.height)
 

@@ -10,7 +10,7 @@ Salida (solo comunas seleccionadas, por defecto las piloto):
   data/staging/catastro/roles_{AAAA}_{S}.parquet
   data/staging/catastro/lineas_{AAAA}_{S}.parquet
 
-Uso: python -m src.etl.catastro 2021_2 [2022_1 ...] [--comunas 15105,15103,14109 | --todas]
+Uso: python -m src.etl.catastro 2021_2 [2022_1 ...] [--comunas 15105,15103,14109 | --gran-santiago | --todas]
      python -m src.etl.catastro --vigente 2026_2
 """
 
@@ -24,7 +24,7 @@ from pathlib import Path
 
 import polars as pl
 
-from .common import PILOTO, RAW, STAGING, Reporte
+from .common import GRAN_SANTIAGO, PILOTO, RAW, STAGING, Reporte
 
 ROLES_CAMPOS = [
     ("cod_comuna", pl.Int32),
@@ -177,6 +177,9 @@ def main(argv: list[str]) -> None:
         if a == "--vigente":
             procesar_vigente(next(it))
             return
+        if a == "--gran-santiago":
+            comunas = set(GRAN_SANTIAGO)
+            continue
         if a == "--todas":
             comunas = None
         elif a == "--comunas":

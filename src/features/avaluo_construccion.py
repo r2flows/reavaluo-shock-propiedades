@@ -36,17 +36,23 @@ REAVALUOS = {
         "vuc": "vuc_2022.csv",
         "anio_base": 2021,
         "dep": _DEP_BASE | {"G": (0.010, 0.70), "K": (0.010, 0.70)},
-        "fc": {15105: 1.00, 15103: 1.00, 14109: 0.90},
+        "fc": "fc_2022",
     },
     "2018": {
         "vuc": "vuc_2018.csv",
         "anio_base": 2017,
         "dep": _DEP_BASE | {"G": (0.015, 0.70), "K": (0.010, 0.70)},
-        "fc": {15105: 1.00, 15103: 1.00, 14109: 0.80},
+        "fc": "fc_2018",
     },
 }
 CE = {"CI": 0.8, "AL": 0.6, "CA": 1.0, "MS": 0.8, "PZ": 0.8, "SB": 0.7}
 SEMESTRE_REAVALUO = {"2021_2": "2018", "2022_1": "2022", "2026_2": "2022"}
+
+
+def factores_comunales(col: str) -> dict[int, float]:
+    """Factor de localización comunal (Res. 28/2018 y 143/2021, Anexo 3), en src/etl/ref/factor_comunal.csv."""
+    f = pl.read_csv(REF / "factor_comunal.csv", separator=";")
+    return dict(zip(f["cod_comuna"].to_list(), f[col].to_list()))
 
 
 def factor_ipc(semestre: str) -> float:
@@ -80,7 +86,7 @@ def valorar_lineas(lineas: pl.DataFrame, reavaluo: str, fipc: float) -> pl.DataF
         .with_columns(
             pl.coalesce("vuc", "vuc_unica").alias("vuc"),
             pl.col("condicion_especial").replace_strict(CE, default=1.0, return_dtype=pl.Float64).alias("ce"),
-            pl.col("cod_comuna").replace_strict(cfg["fc"], default=None, return_dtype=pl.Float64).alias("fc"),
+            pl.col("cod_comuna").replace_strict(factores_comunales(cfg["fc"]), default=None, return_dtype=pl.Float64).alias("fc"),
             pl.when(pl.col("anio_construccion") > 1800)
             .then((cfg["anio_base"] - pl.col("anio_construccion")).clip(lower_bound=0))
             .otherwise(None)

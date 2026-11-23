@@ -18,6 +18,12 @@ REF = Path(__file__).resolve().parent / "ref"
 
 # Comunas piloto (código SII).
 PILOTO = (15105, 15103, 14109)  # Ñuñoa, Providencia, Maipú
+# Gran Santiago: Provincia de Santiago (Santiago dividido en Centro/Oeste/Sur por el SII) + Puente Alto + San Bernardo
+GRAN_SANTIAGO = (
+    13101, 13134, 13135, 13159, 13167, 14107, 14109, 14111, 14113, 14114, 14127, 14155, 14156, 14157, 14158, 14166,
+    15103, 15105, 15108, 15128, 15132, 15151, 15152, 15160, 15161, 16106, 16110, 16131, 16153, 16154, 16162, 16163,
+    16164, 16165, 16301, 16401,
+)
 
 
 def comunas() -> pl.DataFrame:
