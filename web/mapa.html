@@ -1,0 +1,563 @@
+<meta charset="utf-8">
+<title>Atlas del avalúo santiaguino</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;650;750&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: barra de controles arriba; mapa (zoom) + ficha lateral; ranking y metodología abajo. Tinta azul catastral sobre papel claro. */
+:root {
+  --bg: #f6f7f5;
+  --surface: #fcfcfb;
+  --ink: #15202b;
+  --ink-2: #4b5560;
+  --ink-3: #7a838c;
+  --rule: #dfe3e2;
+  --accent: #1d4e89;
+  --accent-soft: #e3ecf7;
+  --stroke-map: #ffffff;
+  --hatch: #9aa3ab;
+  --hilite: #0b0b0b;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121416; --surface: #1a1c1e; --ink: #eef0f1; --ink-2: #b9c0c6; --ink-3: #8c949b;
+    --rule: #2d3236; --accent: #7fb0ea; --accent-soft: #1e2b3b; --stroke-map: #121416;
+    --hatch: #5b636a; --hilite: #ffffff; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121416; --surface: #1a1c1e; --ink: #eef0f1; --ink-2: #b9c0c6; --ink-3: #8c949b;
+  --rule: #2d3236; --accent: #7fb0ea; --accent-soft: #1e2b3b; --stroke-map: #121416;
+  --hatch: #5b636a; --hilite: #ffffff; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 750; }
+h2 { font-size: 1.15rem; font-weight: 650; }
+h3 { font-size: 0.95rem; font-weight: 650; }
+p { margin: 0; }
+.lede { color: var(--ink-2); max-width: 70ch; }
+.eyebrow { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+header { display: grid; gap: 6px; }
+
+/* Controles */
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: end; padding: 12px 14px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); }
+.ctl { display: grid; gap: 4px; min-width: 0; }
+.ctl label, .ctl .lbl { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+.seg { display: flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; }
+.seg button { font: inherit; font-size: 0.85rem; padding: 6px 11px; border: 0; background: transparent; color: var(--ink-2); cursor: pointer; border-right: 1px solid var(--rule); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.seg button:focus-visible, select:focus-visible, input:focus-visible, .btn:focus-visible, th button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+select, input[type="search"] { font: inherit; font-size: 0.88rem; padding: 6px 8px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface); color: var(--ink); max-width: 100%; }
+.btn { font: inherit; font-size: 0.85rem; padding: 6px 11px; border: 1px solid var(--rule); border-radius: var(--radius); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn:hover { border-color: var(--accent); }
+
+/* Cuerpo */
+.main { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 14px; min-width: 0; }
+.mapbox { position: relative; padding: 10px; }
+.mapbox svg { width: 100%; height: auto; display: block; touch-action: none; }
+.layer-note { color: var(--ink-2); font-size: 0.88rem; margin: 2px 52px 8px 4px; max-width: 70ch; }
+.mapbox > .hint { margin-right: 52px !important; }
+.zoombar { position: absolute; top: 14px; right: 14px; display: grid; gap: 4px; }
+.zoombar .btn { width: 34px; height: 34px; padding: 0; font-size: 1.05rem; line-height: 1; }
+path.comuna { stroke: var(--stroke-map); stroke-width: 1; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill 380ms ease; }
+path.comuna.hi { stroke: var(--hilite); stroke-width: 2.2; }
+path.comuna.sel { stroke: var(--accent); stroke-width: 3; }
+path.comuna.cmp { stroke: var(--accent); stroke-width: 3; stroke-dasharray: 5 3; }
+path.overlay { fill: url(#dots); pointer-events: none; }
+text.lab { font-family: var(--font-body); fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; text-anchor: middle; font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { path.comuna { transition: none; } }
+
+.legend { display: grid; gap: 4px; margin: 8px 4px 0; }
+.legend .meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; font-size: 0.8rem; color: var(--ink-2); }
+.legend svg text { fill: var(--ink-2); font-family: var(--font-mono); font-size: 11px; }
+.legend .keys { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.8rem; color: var(--ink-2); }
+.swatch { display: inline-block; width: 14px; height: 10px; vertical-align: -1px; margin-right: 5px; border: 1px solid var(--rule); }
+
+.tooltip { position: absolute; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: var(--radius); padding: 8px 10px; font-size: 0.82rem; box-shadow: 0 4px 14px rgba(0,0,0,0.12); max-width: 240px; z-index: 5; }
+.tooltip strong { font-family: var(--font-display); font-size: 0.92rem; }
+
+/* Ficha */
+.ficha { display: grid; gap: 14px; }
+.ficha .head { display: flex; justify-content: space-between; gap: 10px; align-items: start; flex-wrap: wrap; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.kpi { border-top: 2px solid var(--rule); padding-top: 6px; display: grid; gap: 2px; }
+.kpi .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 1.2rem; font-weight: 500; }
+.kpi .v small { font-size: 0.78rem; color: var(--ink-2); }
+.kpi .k { font-size: 0.78rem; color: var(--ink-2); }
+.kpi.focus { border-top-color: var(--accent); }
+.cmp-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+.cmp-table th, .cmp-table td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.cmp-table td.num, .cmp-table th.num { text-align: right; }
+.cmp-table th { font-weight: 600; color: var(--ink-2); font-size: 0.76rem; letter-spacing: 0.03em; }
+.spark { width: 100%; height: auto; display: block; }
+.spark text { fill: var(--ink-3); font-family: var(--font-mono); font-size: 10px; }
+.spark .grid { stroke: var(--rule); stroke-width: 1; }
+.spark .line { fill: none; stroke: var(--accent); stroke-width: 2; }
+.spark .line.b { stroke: var(--ink-3); stroke-dasharray: 4 3; }
+.spark .area { fill: var(--accent-soft); }
+.spark .dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.hint { font-size: 0.82rem; color: var(--ink-3); }
+.empty { color: var(--ink-2); font-size: 0.9rem; display: grid; gap: 8px; }
+
+/* Ranking */
+.tablewrap { overflow-x: auto; }
+table.rank { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-width: 520px; }
+table.rank th, table.rank td { padding: 6px 8px; border-bottom: 1px solid var(--rule); text-align: left; }
+table.rank td.num, table.rank th.num { text-align: right; }
+table.rank th button { font: inherit; font-weight: 600; color: var(--ink-2); background: none; border: 0; cursor: pointer; padding: 0; }
+table.rank tr { cursor: pointer; }
+table.rank tbody tr:hover, table.rank tr.hi { background: var(--accent-soft); }
+table.rank tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.bar { height: 8px; border-radius: 0 4px 4px 0; display: inline-block; vertical-align: middle; }
+.chip { display: inline-block; font-size: 0.72rem; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--rule); color: var(--ink-2); }
+
+.meth { display: grid; gap: 10px; color: var(--ink-2); font-size: 0.9rem; }
+.meth ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 6px; max-width: 80ch; }
+.meth strong { color: var(--ink); }
+.toast { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: var(--radius); font-size: 0.85rem; z-index: 20; }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Gran Santiago · 34 comunas · datos SII 2010–2026</span>
+    <h1>Atlas del avalúo santiaguino</h1>
+    <p class="lede">Qué tan expuesta está cada comuna al reavalúo 2027, dónde el avalúo pesa más frente al precio y cómo se movió el mercado. Solo cifras agregadas por comuna, a partir de 1,5 millones de ventas y 3,4 millones de roles.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Controles del mapa">
+    <div class="ctl"><span class="lbl" id="lbl-capa">Capa</span><div class="seg" id="capa" aria-labelledby="lbl-capa"></div></div>
+    <div class="ctl" id="ctl-esc"><span class="lbl" id="lbl-esc">Escenario 2027</span><div class="seg" id="esc" aria-labelledby="lbl-esc"></div></div>
+    <div class="ctl"><label for="metrica">Indicador</label><select id="metrica"></select></div>
+    <div class="ctl"><span class="lbl" id="lbl-escala">Escala de color</span><div class="seg" id="escala" aria-labelledby="lbl-escala"></div></div>
+    <div class="ctl"><label for="buscar">Buscar comuna</label><input type="search" id="buscar" list="lista-comunas" placeholder="Ej.: Ñuñoa" autocomplete="off"><datalist id="lista-comunas"></datalist></div>
+  </div>
+
+  <div class="main">
+    <div class="panel mapbox">
+      <p class="layer-note" id="nota-capa"></p>
+      <p class="hint" style="margin:0 4px 6px">Arrastra para mover · Ctrl + rueda o botones para acercar · doble clic en una comuna para encuadrarla</p>
+      <svg id="mapa" viewBox="0 0 620 660" role="img" aria-labelledby="mapa-titulo">
+        <title id="mapa-titulo">Mapa coroplético de las comunas del Gran Santiago</title>
+        <defs>
+          <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="var(--surface)"></rect><line x1="0" y1="0" x2="0" y2="7" stroke="var(--hatch)" stroke-width="2"></line></pattern>
+          <pattern id="dots" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.1" fill="var(--ink)" fill-opacity="0.55"></circle></pattern>
+        </defs>
+        <g id="vista"><g id="capa-comunas"></g><g id="capa-overlay"></g><g id="capa-labels"></g></g>
+      </svg>
+      <div class="zoombar"><button class="btn" id="zin" aria-label="Acercar">+</button><button class="btn" id="zout" aria-label="Alejar">−</button><button class="btn" id="zreset" aria-label="Ver todo el Gran Santiago" title="Ver todo">⤢</button></div>
+      <div class="legend" id="leyenda"></div>
+      <div class="tooltip" id="tip" hidden></div>
+    </div>
+
+    <aside class="panel ficha" id="ficha" aria-live="polite"></aside>
+  </div>
+
+  <section class="panel" aria-labelledby="t-rank" style="display:grid;gap:10px">
+    <div class="ficha head" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:end">
+      <div><span class="eyebrow">Ranking</span><h2 id="t-rank">Comunas por indicador seleccionado</h2></div>
+      <button class="btn" id="copiar">Copiar tabla (CSV)</button>
+    </div>
+    <div class="tablewrap"><table class="rank" id="ranking"></table></div>
+  </section>
+
+  <section class="panel meth" aria-labelledby="t-meth">
+    <span class="eyebrow">Metodología y límites</span>
+    <h2 id="t-meth">Cómo leer este atlas</h2>
+    <ul>
+      <li><strong>No es un mapa de oportunidades de compra.</strong> Se probó si la brecha precio/avalúo predice la plusvalía de un barrio: en 3 comunas piloto pareció que sí, pero la réplica en las otras 33 no lo confirmó (efecto 4 veces menor y no significativo). Tampoco el alza de contribuciones de 2022 aumentó las ventas.</li>
+      <li><strong>Reavalúo 2027:</strong> escenarios, no pronóstico. El SII decide cuánto sube el avalúo; en 2022 lo subió 28% real y cerró la brecha. Desde entonces la brecha está plana (~1,7). S0 supone que el SII mantiene la razón de 2022 (+1%), S1 que repite el cierre de 2022 (+26%) y S2 un punto medio. El exento sube con el avalúo y las tasas bajan para que la recaudación no crezca más de 10%. Montos en pesos del 2º semestre de 2026.</li>
+      <li><strong>Potencial de reclamo:</strong> el avalúo del SII es regresivo (PRD 1,10–1,32; el estándar internacional IAAO es 0,98–1,03). Las viviendas más baratas quedan tasadas más cerca de su precio. Un PRD alto y una razón avalúo/precio alta sugieren dónde un reclamo de avalúo tiene más base.</li>
+      <li><strong>Mercado:</strong> índice SPAR (precio ÷ avalúo fijo de referencia) de ventas de segunda mano. La trama de puntos marca retornos que no se distinguen de cero con el intervalo de confianza de 95%.</li>
+      <li><strong>Datos:</strong> transferencias F2890 y detalle catastral del SII, con UF del SII. Las comunas SII Santiago Centro, Oeste y Sur se muestran juntas como Santiago. Los indicadores con menos de 30 ventas no se muestran (trama gris). No hay datos por propiedad en esta página.</li>
+      <li><strong>Pendiente:</strong> el zoom dentro de cada comuna (barrios) espera la geometría de manzanas del SII.</li>
+    </ul>
+    <p class="hint">Fuente del análisis y pre-registro: repositorio r2flows/reavaluo-shock-propiedades. Límites comunales: paquete chilemapas.</p>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+const GEO = /*__GEO__*/null;
+const DATA = /*__DATA__*/null;
+
+const fmtPct = d3.format(".1f"), fmtInt = d3.format(",.0f"), fmt2 = d3.format(".2f");
+const es = d3.formatLocale({ decimal: ",", thousands: ".", grouping: [3], currency: ["$", ""] });
+const nf = { pct: v => es.format(".1f")(v) + "%", pp: v => (v > 0 ? "+" : "") + es.format(".1f")(v) + "%", int: v => es.format(",.0f")(v), clp: v => "$" + es.format(",.0f")(v), r2: v => es.format(".2f")(v), uf: v => es.format(".1f")(v) + " UF" };
+
+const CAPAS = {
+  reavaluo: { nombre: "Reavalúo 2027", escenario: true,
+    nota: "Proyección por escenario. El SII decide el nivel del alza; dentro de cada comuna se supone uniforme.",
+    metricas: [
+      { k: "r27_{E}_pct_alza_200k", t: "% viviendas con alza > $200 mil/año", f: nf.pct, div: false },
+      { k: "r27_{E}_alza_avaluo_pct", t: "Alza mediana del avalúo", f: nf.pct, div: false },
+      { k: "r27_{E}_pasan_a_pagar", t: "Viviendas que pasan a pagar", f: nf.int, div: false },
+      { k: "r27_{E}_alza_anual_mediana", t: "Alza anual mediana (las que suben)", f: nf.clp, div: false },
+    ] },
+  reclamo: { nombre: "Potencial de reclamo", escenario: false,
+    nota: "Ventas de segunda mano 2024–2026. Avalúo/precio alto y PRD alto indican avalúos relativamente más pesados.",
+    metricas: [
+      { k: "rec_aval_precio_mediano", t: "Avalúo/precio mediano", f: nf.r2, div: false },
+      { k: "rec_pct_sobre_p75", t: "% ventas con avalúo/precio alto (sobre p75 del Gran Santiago)", f: nf.pct, div: false },
+      { k: "rec_prd", t: "PRD: regresividad (ideal 0,98–1,03)", f: nf.r2, div: false },
+      { k: "rec_cod", t: "COD: dispersión del avalúo (ideal < 15)", f: v => es.format(".0f")(v), div: false },
+    ] },
+  brecha: { nombre: "Brecha precio/avalúo", escenario: false,
+    nota: "Precio de venta ÷ avalúo fiscal. El reavalúo 2022 la bajó de 2,2 a 1,7; un aumento desde entonces anticipa más alza en 2027.",
+    metricas: [
+      { k: "bre_nivel_2426", t: "Precio/avalúo mediano 2024–2026", f: nf.r2, div: false },
+      { k: "bre_cambio_pct", t: "Cambio desde 2022–2023", f: nf.pp, div: true },
+    ] },
+  mercado: { nombre: "Mercado", escenario: false,
+    nota: "Índice SPAR de segunda mano. La trama de puntos marca retornos no distinguibles de cero (IC 95%).",
+    metricas: [
+      { k: "mer_ret_22_25_pct", t: "Retorno 2022 → 2025 (UF)", f: nf.pp, div: true, ic: "mer_ret_ic95_pp" },
+      { k: "mer_uf_m2", t: "UF por m² construido (mediana 2024–26)", f: nf.uf, div: false },
+    ] },
+  contribuciones: { nombre: "Contribuciones hoy", escenario: false,
+    nota: "Situación del 2º semestre de 2026, viviendas.",
+    metricas: [
+      { k: "con_pct_exentas", t: "% viviendas exentas", f: nf.pct, div: false },
+      { k: "con_anual_mediana_afectas", t: "Contribución anual mediana (afectas)", f: nf.clp, div: false },
+    ] },
+};
+const ESCS = [["s0", "S0 · +1%"], ["s2", "S2 · medio"], ["s1", "S1 · +26%"]];
+
+const st = { capa: "reavaluo", esc: "s1", m: 0, escala: "vista", sel: null, cmp: null, sortKey: "valor", sortDir: -1, t: d3.zoomIdentity };
+const byCut = new Map(DATA.comunas.map(c => [c.cut, c]));
+
+// ---- Color: rampas por tema (secuencial azul; divergente azul–gris–rojo) ----
+function oscuro() {
+  const t = document.documentElement.getAttribute("data-theme");
+  if (t === "dark") return true; if (t === "light") return false;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+const RAMPAS = {
+  light: { seq: ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"], div: ["#184f95", "#6da7ec", "#f0efec", "#ec9a8a", "#b53030"] },
+  dark: { seq: ["#16314f", "#184f95", "#256abf", "#3987e5", "#6da7ec", "#9ec5f4", "#cde2fb"], div: ["#3987e5", "#25486f", "#383835", "#7a3431", "#e66767"] },
+};
+
+// ---- Utilidades ----
+const metrica = () => CAPAS[st.capa].metricas[st.m];
+const clave = () => metrica().k.replace("{E}", st.esc.toUpperCase());
+const valor = c => (c ? c[clave()] : null);
+function noSig(c) { const m = metrica(); if (!m.ic || !c) return false; const v = c[m.k], ic = c[m.ic]; return v != null && ic != null && Math.abs(v) < ic; }
+function toast(msg) { const el = document.getElementById("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => (el.hidden = true), 2200); }
+function guardar() { try { localStorage.setItem("atlas-capa", st.capa); } catch (e) {} }
+
+// ---- Mapa ----
+const W = 620, H = 660;
+const svg = d3.select("#mapa"), vista = d3.select("#vista");
+// Encuadre inicial en la mancha urbana: los sectores rurales de Lo Barnechea, Pudahuel o San Bernardo
+// quedan fuera del cuadro inicial y se ven alejando o desplazando el mapa.
+const URBANO = { type: "Feature", geometry: { type: "Polygon", coordinates: [[[-70.86, -33.33], [-70.45, -33.33], [-70.45, -33.65], [-70.86, -33.65], [-70.86, -33.33]]] } };
+const proj = d3.geoMercator().fitExtent([[12, 12], [W - 12, H - 12]], URBANO);
+const path = d3.geoPath(proj);
+const feats = GEO.features;
+const bounds = new Map(feats.map(f => [f.properties.cut, path.bounds(f)]));
+const centro = new Map(feats.map(f => [f.properties.cut, path.centroid(f)]));
+const areaPx = new Map(feats.map(f => [f.properties.cut, path.area(f)]));
+
+const pComunas = d3.select("#capa-comunas").selectAll("path").data(feats, f => f.properties.cut).join("path")
+  .attr("class", "comuna").attr("d", path).attr("tabindex", 0)
+  .attr("aria-label", f => f.properties.nombre)
+  .on("mousemove", (ev, f) => mostrarTip(ev, f.properties.cut))
+  .on("mouseleave", () => { ocultarTip(); resaltar(null); })
+  .on("click", (ev, f) => seleccionar(f.properties.cut, ev.shiftKey))
+  .on("dblclick", (ev, f) => { ev.stopPropagation(); encuadrar(f.properties.cut); })
+  .on("keydown", (ev, f) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); seleccionar(f.properties.cut, ev.shiftKey); } });
+const pOverlay = d3.select("#capa-overlay").selectAll("path").data(feats, f => f.properties.cut).join("path").attr("class", "overlay").attr("d", path);
+const labs = d3.select("#capa-labels").selectAll("text").data(feats, f => f.properties.cut).join("text")
+  .attr("class", "lab").attr("x", f => centro.get(f.properties.cut)[0]).attr("y", f => centro.get(f.properties.cut)[1]).attr("dy", "0.35em")
+  .text(f => f.properties.nombre);
+
+const zoom = d3.zoom().scaleExtent([0.5, 10]).extent([[0, 0], [W, H]]).translateExtent([[-W, -H], [2 * W, 2 * H]])
+  .on("zoom", ev => { st.t = ev.transform; vista.attr("transform", ev.transform); ajustarEtiquetas(); })
+  .on("end", () => { if (st.escala === "vista") pintar(); });
+// La rueda solo hace zoom con Ctrl/Cmd (para no secuestrar el scroll de la página); arrastre y pellizco siempre.
+zoom.filter(ev => (ev.type === "wheel" ? ev.ctrlKey || ev.metaKey : !ev.button));
+svg.call(zoom).on("dblclick.zoom", null);
+d3.select("#zin").on("click", () => svg.transition().duration(300).call(zoom.scaleBy, 1.6));
+d3.select("#zout").on("click", () => svg.transition().duration(300).call(zoom.scaleBy, 1 / 1.6));
+d3.select("#zreset").on("click", () => svg.transition().duration(450).call(zoom.transform, d3.zoomIdentity));
+
+function encuadrar(cut) {
+  const [[x0, y0], [x1, y1]] = bounds.get(cut);
+  const k = Math.min(8, 0.8 / Math.max((x1 - x0) / W, (y1 - y0) / H));
+  const t = d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+  svg.transition().duration(600).call(zoom.transform, t);
+}
+function ajustarEtiquetas() {
+  const k = st.t.k;
+  labs.attr("font-size", 11 / k)
+    .attr("display", f => (areaPx.get(f.properties.cut) * k * k > 2600 ? null : "none"))
+    .style("stroke-width", 3 / k + "px");
+}
+function visibles() {
+  if (st.escala === "fija") return DATA.comunas;
+  const t = st.t;
+  return DATA.comunas.filter(c => {
+    const b = bounds.get(c.cut); if (!b) return false;
+    const x0 = t.applyX(b[0][0]), y0 = t.applyY(b[0][1]), x1 = t.applyX(b[1][0]), y1 = t.applyY(b[1][1]);
+    return x1 > 0 && x0 < W && y1 > 0 && y0 < H;
+  });
+}
+let escalaColor = null, dominio = null, nVis = 0;
+function construirEscala() {
+  const m = metrica(), vis = visibles();
+  const vals = vis.map(valor).filter(v => v != null && isFinite(v)).sort(d3.ascending);
+  nVis = vis.length;
+  const all = DATA.comunas.map(valor).filter(v => v != null).sort(d3.ascending);
+  const base = vals.length >= 3 ? vals : all;
+  let lo = d3.quantileSorted(base, 0.05), hi = d3.quantileSorted(base, 0.95);
+  if (lo === hi) { lo -= 1; hi += 1; }
+  const R = oscuro() ? RAMPAS.dark : RAMPAS.light;
+  if (m.div) {
+    const a = Math.max(Math.abs(lo), Math.abs(hi)) || 1;
+    dominio = [-a, a];
+    escalaColor = d3.scaleSequential(d3.interpolateRgbBasis(R.div)).domain(dominio).clamp(true);
+  } else {
+    dominio = [lo, hi];
+    escalaColor = d3.scaleSequential(d3.interpolateRgbBasis(R.seq)).domain(dominio).clamp(true);
+  }
+}
+function pintar() {
+  construirEscala();
+  pComunas.attr("fill", f => { const v = valor(byCut.get(f.properties.cut)); return v == null ? "url(#hatch)" : escalaColor(v); })
+    .classed("sel", f => f.properties.cut === st.sel).classed("cmp", f => f.properties.cut === st.cmp);
+  pOverlay.attr("display", f => (noSig(byCut.get(f.properties.cut)) ? null : "none"));
+  leyenda(); ranking(); ficha(); hash();
+}
+function leyenda() {
+  const m = metrica(), el = d3.select("#leyenda"); el.html("");
+  const lw = 300, lh = 12;
+  const meta = el.append("div").attr("class", "meta");
+  meta.append("span").html(`<strong>${m.t}</strong>`);
+  meta.append("span").text(st.escala === "vista" ? `Escala ajustada a ${nVis} comunas visibles` : "Escala fija: todo el Gran Santiago");
+  const s = el.append("svg").attr("viewBox", `0 0 ${lw + 20} 34`).attr("width", "100%").style("max-width", "420px");
+  const gid = "grad-ley";
+  const grad = s.append("defs").append("linearGradient").attr("id", gid);
+  d3.range(0, 1.0001, 0.1).forEach(p => grad.append("stop").attr("offset", p).attr("stop-color", escalaColor(dominio[0] + p * (dominio[1] - dominio[0]))));
+  s.append("rect").attr("x", 10).attr("y", 2).attr("width", lw).attr("height", lh).attr("rx", 2).attr("fill", `url(#${gid})`);
+  const x = d3.scaleLinear().domain(dominio).range([10, 10 + lw]);
+  x.ticks(4).forEach(t => { s.append("line").attr("x1", x(t)).attr("x2", x(t)).attr("y1", 2 + lh).attr("y2", 18).attr("stroke", "var(--ink-3)"); s.append("text").attr("x", x(t)).attr("y", 30).attr("text-anchor", "middle").text(m.f(t)); });
+  const keys = el.append("div").attr("class", "keys");
+  keys.append("span").html('<span class="swatch" style="background:var(--surface);background-image:repeating-linear-gradient(45deg,var(--hatch) 0 2px,transparent 2px 6px)"></span>Sin datos suficientes (n &lt; 30)');
+  if (m.ic) keys.append("span").html('<span class="swatch" style="background:radial-gradient(var(--ink) 1px,transparent 1.4px) 0 0/5px 5px"></span>No distinguible de 0 (IC 95%)');
+  keys.append("span").text("Valores fuera del rango p5–p95 se muestran en el color extremo");
+}
+
+// ---- Tooltip ----
+const tip = document.getElementById("tip");
+function mostrarTip(ev, cut) {
+  const c = byCut.get(cut), m = metrica(), v = valor(c);
+  const box = document.querySelector(".mapbox").getBoundingClientRect();
+  let extra = "";
+  if (m.ic && c && c[m.ic] != null) extra = `<br><span class="num">± ${es.format(".1f")(c[m.ic])} pp (IC 95%)</span>`;
+  tip.innerHTML = `<strong>${c.nombre}</strong><br>${m.t}:<br><span class="num">${v == null ? "sin datos suficientes" : m.f(v)}</span>${extra}<br><span style="color:var(--ink-3)">${nf.int(c.viviendas)} viviendas · clic: ficha · Mayús+clic: comparar</span>`;
+  tip.hidden = false;
+  const x = Math.min(ev.clientX - box.left + 14, box.width - 250), y = ev.clientY - box.top + 14;
+  tip.style.left = Math.max(6, x) + "px"; tip.style.top = y + "px";
+  resaltar(cut);
+}
+function ocultarTip() { tip.hidden = true; }
+function resaltar(cut) {
+  pComunas.classed("hi", f => f.properties.cut === cut);
+  d3.selectAll("table.rank tbody tr").classed("hi", d => d && d.cut === cut);
+  if (cut) pComunas.filter(f => f.properties.cut === cut).raise();
+}
+
+// ---- Selección y ficha ----
+function seleccionar(cut, comparar) {
+  if (comparar && st.sel && cut !== st.sel) st.cmp = st.cmp === cut ? null : cut;
+  else { st.sel = st.sel === cut ? null : cut; if (!st.sel) st.cmp = null; if (st.cmp === st.sel) st.cmp = null; }
+  pintar();
+}
+function rango(k, v) {
+  if (v == null) return "";
+  const vals = DATA.comunas.map(c => c[k]).filter(x => x != null).sort((a, b) => b - a);
+  return `${vals.indexOf(v) + 1} de ${vals.length}`;
+}
+const FICHA = [
+  ["Reavalúo 2027 (escenario elegido)", () => [
+    ["% viviendas con alza > $200 mil/año", `r27_${st.esc.toUpperCase()}_pct_alza_200k`, nf.pct],
+    ["Alza mediana del avalúo", `r27_${st.esc.toUpperCase()}_alza_avaluo_pct`, nf.pct],
+    ["Viviendas que pasan a pagar", `r27_${st.esc.toUpperCase()}_pasan_a_pagar`, nf.int],
+    ["Alza anual mediana (las que suben)", `r27_${st.esc.toUpperCase()}_alza_anual_mediana`, nf.clp],
+  ]],
+  ["Avalúo frente al precio", () => [
+    ["Avalúo/precio mediano 2024–26", "rec_aval_precio_mediano", nf.r2],
+    ["PRD (regresividad)", "rec_prd", nf.r2],
+    ["Precio/avalúo 2024–26", "bre_nivel_2426", nf.r2],
+    ["Cambio de la brecha desde 2022–23", "bre_cambio_pct", nf.pp],
+  ]],
+  ["Mercado y contribuciones", () => [
+    ["Retorno 2022 → 2025 (UF)", "mer_ret_22_25_pct", nf.pp],
+    ["UF por m² (mediana)", "mer_uf_m2", nf.uf],
+    ["% viviendas exentas", "con_pct_exentas", nf.pct],
+    ["Contribución anual mediana (afectas)", "con_anual_mediana_afectas", nf.clp],
+  ]],
+];
+function ficha() {
+  const el = d3.select("#ficha"); el.html("");
+  if (!st.sel) {
+    const top = [...DATA.comunas].filter(c => valor(c) != null).sort((a, b) => valor(b) - valor(a)).slice(0, 3);
+    el.append("div").attr("class", "empty").html(`<span class="eyebrow">Ficha comunal</span><h2>Elige una comuna en el mapa</h2>
+      <p>Clic para ver su ficha; Mayús+clic en otra para compararlas. Doble clic acerca el mapa a esa comuna y la escala de color se ajusta a lo que ves.</p>
+      <p class="hint">Más altas en “${metrica().t}”: ${top.map(c => `<button class="btn" data-cut="${c.cut}" style="margin:2px 4px 2px 0">${c.nombre}</button>`).join("")}</p>`);
+    el.selectAll("button[data-cut]").on("click", function () { seleccionar(this.dataset.cut, false); });
+    return;
+  }
+  const a = byCut.get(st.sel), b = st.cmp ? byCut.get(st.cmp) : null;
+  const head = el.append("div").attr("class", "head");
+  head.append("div").html(`<span class="eyebrow">Ficha comunal${b ? " · comparación" : ""}</span><h2>${a.nombre}${b ? ` <span style="color:var(--ink-3);font-weight:500">vs</span> ${b.nombre}` : ""}</h2><p class="hint">${nf.int(a.viviendas)} viviendas${b ? ` · ${nf.int(b.viviendas)}` : ""} · ${nf.int(a.n_ventas_2426 || 0)} ventas 2024–26</p>`);
+  const acc = head.append("div").style("display", "flex").style("gap", "6px");
+  acc.append("button").attr("class", "btn").text("Encuadrar").on("click", () => encuadrar(st.sel));
+  acc.append("button").attr("class", "btn").text("Cerrar").on("click", () => { st.sel = null; st.cmp = null; pintar(); });
+
+  if (!b) {
+    const m = metrica(), v = valor(a);
+    const kp = el.append("div").attr("class", "kpis");
+    kp.append("div").attr("class", "kpi focus").html(`<span class="k">${m.t}</span><span class="v">${v == null ? "—" : m.f(v)} <small>${rango(clave(), v)}</small></span>`);
+    const ex = [["Alza avalúo 2027 · S0 / S2 / S1", ["S0", "S2", "S1"].map(e => a[`r27_${e}_alza_avaluo_pct`] == null ? "—" : es.format(".0f")(a[`r27_${e}_alza_avaluo_pct`])).join(" / ") + "%"], ["Avalúo/precio · PRD", `${a.rec_aval_precio_mediano == null ? "—" : nf.r2(a.rec_aval_precio_mediano)} · ${a.rec_prd == null ? "—" : nf.r2(a.rec_prd)}`]];
+    ex.forEach(([k, val]) => kp.append("div").attr("class", "kpi").html(`<span class="k">${k}</span><span class="v">${val}</span>`));
+  }
+  const cmpRow = el.append("div").attr("class", "ctl");
+  cmpRow.append("label").attr("for", "comparar").text("Comparar con");
+  const cs = cmpRow.append("select").attr("id", "comparar");
+  cs.append("option").attr("value", "").text("— ninguna —");
+  DATA.comunas.filter(c => c.cut !== st.sel).forEach(c => cs.append("option").attr("value", c.cut).property("selected", c.cut === st.cmp).text(c.nombre));
+  cs.on("change", function () { st.cmp = this.value || null; pintar(); });
+  FICHA.forEach(([titulo, filas]) => {
+    el.append("h3").text(titulo);
+    const t = el.append("table").attr("class", "cmp-table");
+    t.append("thead").html(`<tr><th>Indicador</th><th class="num">${a.nombre}</th>${b ? `<th class="num">${b.nombre}</th>` : '<th class="num">Ranking</th>'}</tr>`);
+    const tb = t.append("tbody");
+    filas().forEach(([lbl, k, f]) => {
+      const va = a[k], vb = b ? b[k] : null;
+      tb.append("tr").html(`<td>${lbl}</td><td class="num">${va == null ? "—" : f(va)}</td><td class="num">${b ? (vb == null ? "—" : f(vb)) : rango(k, va)}</td>`);
+    });
+  });
+  el.append("h3").text("Precio/avalúo mediano por año");
+  sparkline(el, DATA.series[a.cut]?.brecha, b ? DATA.series[b.cut]?.brecha : null, v => nf.r2(v), "El reavalúo 2022 corta la serie: los avalúos nuevos bajan la razón.");
+  el.append("h3").text("Índice de precios SPAR (2010 = 100, en UF)");
+  sparkline(el, DATA.series[a.cut]?.spar, b ? DATA.series[b.cut]?.spar : null, v => es.format(".0f")(v), b ? `Línea continua: ${a.nombre}; segmentada: ${b.nombre}.` : "Ventas de segunda mano; precio dividido por un avalúo fijo de referencia.");
+}
+function sparkline(el, sa, sb, f, nota) {
+  if (!sa || sa.length < 2) { el.append("p").attr("class", "hint").text("Sin datos suficientes."); return; }
+  const w = 360, h = 120, m = { l: 34, r: 34, t: 10, b: 20 };
+  const todos = sa.concat(sb || []);
+  const x = d3.scaleLinear().domain(d3.extent(todos, d => d[0])).range([m.l, w - m.r]);
+  const y = d3.scaleLinear().domain(d3.extent(todos, d => d[1])).nice(3).range([h - m.b, m.t]);
+  const s = el.append("svg").attr("class", "spark").attr("viewBox", `0 0 ${w} ${h}`);
+  y.ticks(3).forEach(t => { s.append("line").attr("class", "grid").attr("x1", m.l).attr("x2", w - m.r).attr("y1", y(t)).attr("y2", y(t)); s.append("text").attr("x", m.l - 6).attr("y", y(t)).attr("dy", "0.32em").attr("text-anchor", "end").text(f(t)); });
+  x.ticks(4).forEach(t => s.append("text").attr("x", x(t)).attr("y", h - 4).attr("text-anchor", "middle").text(t));
+  const ln = d3.line().x(d => x(d[0])).y(d => y(d[1]));
+  if (!sb) s.append("path").attr("class", "area").attr("d", d3.area().x(d => x(d[0])).y0(h - m.b).y1(d => y(d[1]))(sa));
+  if (sb) s.append("path").attr("class", "line b").attr("d", ln(sb));
+  s.append("path").attr("class", "line").attr("d", ln(sa));
+  const ult = sa[sa.length - 1];
+  s.append("circle").attr("class", "dot").attr("cx", x(ult[0])).attr("cy", y(ult[1])).attr("r", 4);
+  s.append("text").attr("x", x(ult[0]) + 6).attr("y", y(ult[1])).attr("dy", "0.32em").style("fill", "var(--ink)").text(f(ult[1]));
+  // Lectura al pasar el cursor
+  const guia = s.append("line").attr("class", "grid").attr("y1", m.t).attr("y2", h - m.b).style("stroke", "var(--ink-3)").attr("display", "none");
+  const lec = s.append("text").attr("y", m.t + 2).attr("text-anchor", "middle").style("fill", "var(--ink)").attr("display", "none");
+  s.append("rect").attr("x", m.l).attr("y", 0).attr("width", w - m.l - m.r).attr("height", h).attr("fill", "transparent")
+    .on("mousemove", ev => { const [px] = d3.pointer(ev); const yr = Math.round(x.invert(px)); const pa = sa.find(d => d[0] === yr); if (!pa) return; const pb = sb ? sb.find(d => d[0] === yr) : null; guia.attr("x1", x(yr)).attr("x2", x(yr)).attr("display", null); lec.attr("x", Math.min(Math.max(x(yr), m.l + 40), w - m.r - 40)).attr("display", null).text(`${yr}: ${f(pa[1])}${pb ? " · " + f(pb[1]) : ""}`); })
+    .on("mouseleave", () => { guia.attr("display", "none"); lec.attr("display", "none"); });
+  el.append("p").attr("class", "hint").text(nota);
+}
+
+// ---- Ranking ----
+function ranking() {
+  const m = metrica(), t = d3.select("#ranking"); t.html("");
+  const filas = DATA.comunas.map(c => ({ cut: c.cut, nombre: c.nombre, valor: valor(c), viviendas: c.viviendas, ic: m.ic ? c[m.ic] : null }));
+  filas.sort((a, b) => { const k = st.sortKey; const va = a[k], vb = b[k]; if (va == null) return 1; if (vb == null) return -1; return (va < vb ? -1 : va > vb ? 1 : 0) * st.sortDir; });
+  const vmax = d3.max(filas, d => Math.abs(d.valor ?? 0)) || 1;
+  const cols = [["nombre", "Comuna", false], ["valor", m.t, true], ["viviendas", "Viviendas", true]];
+  const hr = t.append("thead").append("tr");
+  hr.append("th").text("#");
+  cols.forEach(([k, lbl, num]) => hr.append("th").attr("class", num ? "num" : null).attr("aria-sort", st.sortKey === k ? (st.sortDir > 0 ? "ascending" : "descending") : null)
+    .append("button").text(lbl + (st.sortKey === k ? (st.sortDir > 0 ? " ↑" : " ↓") : "")).on("click", () => { if (st.sortKey === k) st.sortDir *= -1; else { st.sortKey = k; st.sortDir = k === "nombre" ? 1 : -1; } ranking(); }));
+  hr.append("th").text("Escala");
+  const tb = t.append("tbody");
+  filas.forEach((d, i) => {
+    const tr = tb.append("tr").datum(d).classed("sel", d.cut === st.sel)
+      .on("mouseenter", () => resaltar(d.cut)).on("mouseleave", () => resaltar(null)).on("click", ev => seleccionar(d.cut, ev.shiftKey));
+    tr.append("td").attr("class", "num").text(i + 1);
+    tr.append("td").text(d.nombre);
+    tr.append("td").attr("class", "num").html(d.valor == null ? '<span class="chip">n &lt; 30</span>' : m.f(d.valor) + (d.ic != null ? ` <span style="color:var(--ink-3)">± ${es.format(".1f")(d.ic)}</span>` : ""));
+    tr.append("td").attr("class", "num").text(nf.int(d.viviendas));
+    tr.append("td").html(d.valor == null ? "" : `<span class="bar" style="width:${Math.max(2, 90 * Math.abs(d.valor) / vmax)}px;background:${escalaColor(d.valor)}"></span>`);
+  });
+}
+
+// ---- Controles ----
+function seg(id, opciones, actual, alElegir) {
+  const el = d3.select("#" + id); el.html("");
+  opciones.forEach(([v, lbl]) => el.append("button").attr("type", "button").attr("aria-pressed", v === actual).text(lbl).on("click", () => alElegir(v)));
+}
+function controles() {
+  seg("capa", Object.entries(CAPAS).map(([k, c]) => [k, c.nombre]), st.capa, v => { st.capa = v; st.m = 0; st.sortKey = "valor"; st.sortDir = -1; guardar(); controles(); pintar(); });
+  d3.select("#ctl-esc").attr("hidden", CAPAS[st.capa].escenario ? null : true);
+  seg("esc", ESCS, st.esc, v => { st.esc = v; controles(); pintar(); });
+  seg("escala", [["vista", "Ajustar a la vista"], ["fija", "Fija"]], st.escala, v => { st.escala = v; controles(); pintar(); });
+  const sel = d3.select("#metrica"); sel.html("");
+  CAPAS[st.capa].metricas.forEach((m, i) => sel.append("option").attr("value", i).property("selected", i === st.m).text(m.t));
+  d3.select("#nota-capa").text(CAPAS[st.capa].nota);
+}
+d3.select("#metrica").on("change", function () { st.m = +this.value; pintar(); });
+d3.select("#lista-comunas").selectAll("option").data(DATA.comunas).join("option").attr("value", c => c.nombre);
+d3.select("#buscar").on("change", function () {
+  const q = this.value.trim().toLowerCase(); const c = DATA.comunas.find(c => c.nombre.toLowerCase() === q) || DATA.comunas.find(c => c.nombre.toLowerCase().startsWith(q));
+  if (c) { st.sel = c.cut; st.cmp = null; pintar(); encuadrar(c.cut); } else toast("No encontré esa comuna");
+});
+d3.select("#copiar").on("click", () => {
+  const m = metrica();
+  const csv = ["comuna,cut," + JSON.stringify(m.t) + ",viviendas"].concat(DATA.comunas.map(c => `${JSON.stringify(c.nombre)},${c.cut},${valor(c) ?? ""},${c.viviendas}`)).join("\n");
+  const ok = () => toast("Tabla copiada como CSV");
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(csv).then(ok, () => fallbackCopiar(csv)); else fallbackCopiar(csv);
+});
+function fallbackCopiar(txt) { const ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast("Tabla copiada como CSV"); } catch (e) { toast("Selecciona y copia el texto manualmente"); } ta.remove(); }
+
+// ---- Estado en la URL: #capa-esc-indicador-comuna ----
+function hash() {
+  const h = `${st.capa}-${st.esc}-m${st.m}-${st.sel || "todas"}`;
+  if (location.hash.slice(1) !== h) { try { history.replaceState(null, "", "#" + h); } catch (e) {} }
+}
+function leerHash() {
+  const p = location.hash.slice(1).split("-");
+  if (p.length >= 4 && CAPAS[p[0]]) {
+    st.capa = p[0]; if (["s0", "s1", "s2"].includes(p[1])) st.esc = p[1];
+    const mi = parseInt(p[2].slice(1), 10); if (mi >= 0 && mi < CAPAS[st.capa].metricas.length) st.m = mi;
+    st.sel = byCut.has(p[3]) ? p[3] : null; return true;
+  }
+  return false;
+}
+window.addEventListener("hashchange", () => { if (leerHash()) { controles(); pintar(); } });
+
+// ---- Tema ----
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", pintar);
+new MutationObserver(pintar).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+// ---- Inicio ----
+if (!leerHash()) { try { const c = localStorage.getItem("atlas-capa"); if (c && CAPAS[c]) st.capa = c; } catch (e) {} }
+controles(); ajustarEtiquetas(); pintar();
+</script>
