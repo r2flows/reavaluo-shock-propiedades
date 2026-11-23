@@ -128,5 +128,6 @@ Esquema común: `ratio_ia`, ciclo de reavalúo y nivel legal de tasación. Candi
 - [ ] Exención para mayores de 65 en tramitación: riesgo para P3, pero también experimento de signo opuesto.
 - [ ] El reavalúo 2027 podría postergarse otra vez, lo que retrasaría la prueba fuera de muestra.
 - [ ] Riesgo reputacional de productos dirigidos a vendedores vulnerables.
+- [x] **Fase 6 (23-11-2026):** P3 nulo → se abandona el producto "vendedor forzado". P1 confirma reversión de la brecha (−1,2 pp de retorno a 3 años por +10% de brecha; p perm. 0,0015), pero no se replica en 2021. Ver `docs/fase6_resultados_p1_y_resumen.md`.
 - [ ] Fase 5: el índice por barrio es ruidoso (retorno a 3 años ±13%). La primera mirada no muestra que la brecha prediga retornos (corr. −0,03). En la Fase 6, evitar correlaciones mecánicas: las variables y el objetivo no pueden compartir ventas ni años extremos.
 - [ ] Barrios inferidos por numeración de manzanas: validar la contigüidad con la cartografía del SII.
