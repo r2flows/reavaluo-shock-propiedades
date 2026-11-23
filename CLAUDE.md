@@ -1,0 +1,35 @@
+# Proyecto: brecha avalúo–mercado y oportunidades inmobiliarias
+
+## Objetivo
+Medir si la brecha entre el valor de mercado y el avalúo fiscal del SII predice retornos
+por barrio y por propiedad, y si el shock de contribuciones de los reavalúos (2018, 2022, 2027)
+genera vendedores forzados. Piloto: Gran Santiago.
+Plan vigente: docs/plan.md. Crítica del plan original: docs/evaluacion_critica.md.
+Especificaciones pre-registradas: docs/analysis_plan.md.
+
+## Reglas
+- data/raw/ es inmutable: nunca editar, mover ni borrar.
+- La clave de una propiedad es el rol: comuna-manzana-predio.
+- Nunca guardar RUT, nombres ni otros datos personales. No construir nada que vincule un rol con su dueño.
+- Cada parser tiene un esquema explícito y un test con un fixture de unas 50 filas.
+- Los archivos del detalle catastral vienen sin encabezado y separados por "|":
+  mapear columnas según docs/estructura_detalle_catastral.pdf.
+- Montos en UF a la fecha de la escritura.
+- Monto exento y tasas: los vigentes en cada semestre, nunca los actuales.
+- Las variables para ML usan solo información disponible en t (sin filtración temporal).
+- Validación de modelos: hacia adelante en el tiempo + bloques espaciales; siempre contra una línea base de momentum.
+- Cada paso reporta filas de entrada, descartes por motivo y filas de salida.
+- No cambiar especificaciones de docs/analysis_plan.md sin registrar el cambio.
+- No avanzar de fase sin cumplir su criterio de aceptación en docs/plan.md.
+- Revisar los términos de uso antes de automatizar cualquier descarga de un proveedor o portal.
+
+## Estructura
+data/raw | data/staging | data/marts
+src/etl | src/features | src/models | tests | docs
+
+## Stack
+Python 3.12, uv, DuckDB, Polars, Parquet, pyfixest, rdrobust, lightgbm, shap, scikit-learn, pytest.
+
+## Comandos
+uv run pytest
+uv run python -m src.etl.<paso>
