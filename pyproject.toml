@@ -16,6 +16,8 @@ dependencies = [
 
 [dependency-groups]
 dev = ["pytest>=8"]
+# Servicio privado de pre-informes de títulos (src/titulos/app.py)
+servicio = ["fastapi==0.115.6", "uvicorn==0.32.1", "python-multipart==0.0.20", "pypdf==5.1.0", "httpx==0.28.1"]
 
 [tool.uv]
 package = false

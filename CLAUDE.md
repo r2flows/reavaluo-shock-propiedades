@@ -10,7 +10,11 @@ Especificaciones pre-registradas: docs/analysis_plan.md.
 ## Reglas
 - data/raw/ es inmutable: nunca editar, mover ni borrar.
 - La clave de una propiedad es el rol: comuna-manzana-predio.
-- Nunca guardar RUT, nombres ni otros datos personales. No construir nada que vincule un rol con su dueño.
+- Nunca guardar RUT, nombres ni otros datos personales en el repo, en data/ ni en ningún archivo o base persistente.
+- Vincular un rol con su dueño solo se permite en el servicio privado de títulos (src/titulos/, con clave), a partir de
+  certificados del Conservador que el propio usuario sube para un encargo concreto: se procesan en memoria, se muestran
+  en pantalla y se descartan. Prohibido: guardarlos, registrarlos en logs, publicarlos o armar índices masivos rol→dueño.
+  Cambio de regla del 24-11-2026, a pedido del usuario: ver docs/conservadores_y_titulos.md §5.
 - Cada parser tiene un esquema explícito y un test con un fixture de unas 50 filas.
 - Los archivos del detalle catastral vienen sin encabezado y separados por "|":
   mapear columnas según docs/estructura_detalle_catastral.pdf.

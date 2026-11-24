@@ -24,13 +24,20 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import html
+import os
 import re
 import sys
 import unicodedata
+from pathlib import Path
 
 import polars as pl
 
 from src.etl.common import MARTS, REF, ROOT, STAGING
+
+# En el servicio privado los datos vienen empaquetados (src.titulos.empaquetar) en otra carpeta
+if os.environ.get("PREINFORME_DATOS"):
+    STAGING = Path(os.environ["PREINFORME_DATOS"]) / "staging"
+    MARTS = Path(os.environ["PREINFORME_DATOS"]) / "marts"
 
 SALIDA = ROOT / "privado" / "preinformes"
 SEMESTRES = ("2021_2", "2022_1", "2026_2")
@@ -115,7 +122,7 @@ def uf(x) -> str:
     return "—" if x is None else f"{x:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".") + " UF"
 
 
-def informe(d: dict) -> str:
+def informe(d: dict, extra: str = "") -> str:
     rid, cat = d["rol_id"], d["cat"]
     ult = cat.get("2026_2") or list(cat.values())[-1]
     cod, mz, pr = rid.split("-")
@@ -124,7 +131,7 @@ def informe(d: dict) -> str:
     comuna = fila_c["nombre_mapa"][0] if fila_c.height else cod
     cut = int(fila_c["cut"][0]) if fila_c.height else None
     cbr = pl.read_csv(REF / "cbr_por_comuna.csv", separator=";").filter(pl.col("cut") == cut)
-    cbr_txt = f"CBR de {cbr['cbr_probable'][0]} (probable; {cbr['estado'][0].replace('_', ' ')})" if cbr.height else "—"
+    cbr_txt = (f"CBR de {cbr['cbr_probable'][0]} ({'verificado' if cbr['estado'][0] == 'verificado' else 'probable, por verificar'})") if cbr.height else "—"
     alertas: list[tuple[str, str]] = []  # (nivel, texto)
     # Historia en el catastro
     hist = []
@@ -232,6 +239,7 @@ dl{{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;font-size:.9
 <table><thead><tr><th>Escritura</th><th>Inscripción</th><th class=n>Monto</th><th class=n>Precio ÷ avalúo</th><th class=n>Típico</th><th>Observaciones</th></tr></thead><tbody>{filas_tr}</tbody></table>
 <h2>Contribuciones 2027 estimadas (reavalúo no oficial)</h2>
 <table><thead><tr><th>Escenario</th><th class=n>Avalúo 2027</th><th class=n>Contribución anual</th></tr></thead><tbody>{filas_27}</tbody></table>
+{extra}
 <h2>Lo que este pre-informe no cubre</h2>
 <ul><li>Quién es el dueño, la cadena de títulos con sus nombres y la continuidad de las inscripciones: certificados del Conservador.</li>
 <li>Hipotecas, gravámenes, prohibiciones, interdicciones, embargos y litigios: certificado GP del Conservador y revisión de causas.</li>

@@ -27,9 +27,11 @@ Fecha: 24-11-2026. Es una herramienta separada del estudio académico; no cambia
 - Términos de uso publicados que autoricen la extracción automatizada.
 - Un proveedor chileno que haga estudios de títulos automatizados vía API.
 
-**Jurisdicción por comuna:** no hallamos una lista oficial en línea.
-- `src/etl/ref/cbr_por_comuna.csv` asigna un CBR *probable* a cada comuna y la marca `por_verificar`.
-- Hay que confirmarla con el cuadro que cada CBR debe publicar.
+**Jurisdicción por comuna** (`src/etl/ref/cbr_por_comuna.csv`):
+- **Verificado** con el mapa de jurisdicción de cbrsanmiguel.cl: el CBR de San Miguel atiende San Miguel, La Cisterna, La Granja, El Bosque, San Ramón, San Joaquín, Lo Espejo y La Pintana.
+- Pedro Aguirre Cerda queda fuera de ese mapa; el sitio de San Miguel anuncia un nuevo Conservador de Pedro Aguirre Cerda.
+- La Florida no pertenece a San Miguel; falta confirmar si es Santiago o Puente Alto.
+- El resto sigue `por_verificar`: los sitios de Puente Alto y San Bernardo no resolvieron por DNS y conservadores.cl tenía el certificado vencido.
 
 ## 2. Opciones
 
@@ -69,9 +71,31 @@ Límites:
 - El F2890 no trae fojas ni número, así que la búsqueda en el CBR se hace por fecha de inscripción.
 - Las fechas imposibles (año menor a 1950 o futuro) se descartan y se informa cuántas fueron.
 
-## 4. Pendiente con el usuario
-- ¿Servicio privado con clave (fuera de este equipo)? Implica subir datos por rol a un servidor. Hoy solo corre en local.
-- ¿Opción E (lector de certificados)? Requiere cambiar la regla del proyecto.
+## 4. Decisiones del usuario (24-11-2026)
+El usuario aprobó el servicio privado con clave, la opción E (lector de certificados), verificar los CBR por comuna y flexibilizar la regla de CLAUDE.md.
+
+## 5. Cambio de regla y servicio privado
+**Regla anterior:** «Nunca guardar RUT, nombres ni otros datos personales. No construir nada que vincule un rol con su dueño».
+
+**Regla nueva** (CLAUDE.md):
+- Sigue prohibido **guardar** datos personales en cualquier archivo o base.
+- Vincular un rol con su dueño solo se permite en el servicio privado de títulos, con certificados que el usuario sube para un encargo concreto. Se procesan en memoria, se muestran y se descartan.
+- Siguen prohibidos los logs, la publicación y los índices masivos rol→dueño.
+
+**Servicio** `preinforme-titulos` (Railway, mismo proyecto que el atlas):
+- **Código:** `src/titulos/app.py` (FastAPI) y `certificados.py`, que lee el texto del PDF y extrae fojas, número, año, roles, personas con cédula, montos y cargas, y luego cruza con el F2890.
+- **Datos:** `src.titulos.empaquetar` deja unos 210 MB en `privado/servicio/datos`. `src.titulos.construir_servicio` arma `privado/servicio/build`. Ambas carpetas están fuera de git.
+- **Seguridad:**
+  - HTTP Basic sobre HTTPS, con usuario y clave en variables de Railway; copia local en `.env`.
+  - Bloqueo de 15 minutos tras 10 intentos fallidos por IP.
+  - Respuestas `no-store` y `noindex`, con CSP estricta.
+  - Sin registro de accesos, sin base de datos y sin escritura de archivos.
+  - El servicio no parte sin una clave de al menos 16 caracteres.
+- **Actualizar:** `scripts/correr.sh --mem 5G src.titulos.empaquetar && .venv/bin/python -m src.titulos.construir_servicio && cd privado/servicio/build && railway up --ci --service preinforme-titulos --project <id> --environment production`.
+- **Límites:**
+  - Los PDF escaneados (sin texto) no se leen, porque no hay OCR.
+  - La extracción es heurística y el abogado debe verificarla.
+  - El servicio tiene un único usuario compartido.
 
 Fuentes:
 - Ley 21.772 en BCN: https://www.bcn.cl/leychile/navegar?idNorma=255400
