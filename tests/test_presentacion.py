@@ -48,3 +48,30 @@ def test_micro_supresion_y_rangos():
             assert r["rec_aval_precio_mediano"] is None and r["uf_m2_mediano_2426"] is None and r["bre_cambio_pct"] is None
         if r["uf_m2_mediano_2426"] is not None:
             assert 3 < r["uf_m2_mediano_2426"] < 400
+
+
+def test_micro_nombres_unicos_y_sin_numeros():
+    import re
+    from collections import Counter
+
+    filas = _micro()
+    con_nombre = [r for r in filas if r["nombre"]]
+    assert len(con_nombre) / len(filas) > 0.95
+    por_comuna = Counter((r["id"].split("-")[0], r["nombre"]) for r in con_nombre)
+    assert max(por_comuna.values()) == 1, "nombres repetidos dentro de una comuna"
+    for r in con_nombre:
+        assert not re.search(r"\d{3,}|[A-Za-z]\d", r["nombre"].split(" (mz")[0]), r["nombre"]  # sin números de casa (sí "21 de Mayo")
+        assert all(0 <= p <= 100 for _, p in r["calles"])
+        if r["rotacion_anual_pct"] is not None:
+            assert 0 <= r["rotacion_anual_pct"] < 50
+
+
+def test_indice_calles_sin_numeros_ni_roles():
+    import re
+
+    idx = json.loads((WEB / "calles.json").read_text(encoding="utf8"))
+    ids = {r["id"] for r in _micro()}
+    for cut, cs in idx.items():
+        for calle, mids in cs.items():
+            assert not re.search(r"\d{3,}|[A-Za-z]\d", calle), calle
+            assert set(mids) <= ids

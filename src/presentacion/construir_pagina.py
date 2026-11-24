@@ -23,7 +23,7 @@ def main() -> None:
     salida.write_text(html, encoding="utf8")
     # Archivo de apoyo (se publica junto a la página como data/microbarrios.json)
     (salida.parent / "data").mkdir(exist_ok=True)
-    for nombre in ("microbarrios.json", "microbarrios.geojson"):
+    for nombre in ("microbarrios.json", "microbarrios.geojson", "calles.json"):
         origen = WEB / "data" / nombre
         if origen.exists():
             (salida.parent / "data" / nombre).write_bytes(origen.read_bytes())
