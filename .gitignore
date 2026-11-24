@@ -4,3 +4,6 @@ data/
 __pycache__/
 *.pyc
 web/build/
+
+# Salidas por rol (pre-informes de títulos): nunca al repo público
+privado/
