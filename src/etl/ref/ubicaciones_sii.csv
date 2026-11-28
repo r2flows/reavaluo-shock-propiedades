@@ -1,0 +1,4 @@
+cod_ubicacion;descripcion;confirmado;nota
+U;Urbano;no;Interpretación del código del catastro, el PDF del SII no lo define. No reemplaza el Certificado de Informaciones Previas.
+R;Rural;no;Interpretación del código del catastro, el PDF del SII no lo define. No reemplaza el Certificado de Informaciones Previas.
+E;Probable extensión urbana;no;Código sin definición publicada, concentrado en parcelas y lotes de comunas con área de extensión urbana (Pudahuel, Lo Barnechea, Peñalolén). Confirmar con el SII.

@@ -176,3 +176,48 @@ def test_expediente_real_sin_datos_personales():
     h = ex.informe(d)
     assert "indicio fuerte" in h and "Cuánto pagará en 2027" in h and "no constituye asesoría legal" in h
     assert "RUT" not in h.upper().replace("RUTA", "")
+
+
+# --- terreno: búsqueda por dirección ------------------------------------------------------------------------------
+
+from src.producto import terreno as ter  # noqa: E402
+
+
+@pytest.fixture
+def direcciones() -> pl.DataFrame:
+    d = ["LOS HEROES PC 39", "LOS HEROES ST 23", "LOTE 1 -A PC 50 -B LOS HEROES", "CAM INT SARA EL CARMEN", "AVDA. IRARRAZAVAL 1989 BD 366",
+         "IRARRAZAVAL 366 376", "AV IRARRAZAVAL 3785 BD 366", "PJE EL PUEBLO 5875", "LS CATURRAS 01155", "STA ESTER ST 3",
+         "HJ 5 CAM EL BOSQUE LT 2", "PARCELA SANTA MARTA HIJUELA 4", "J MANUEL INFANTE 2270 A BD 26", "M PEREIRA 3350 DP 302", None]
+    return pl.DataFrame({"rol_id": [f"1-1-{i}" for i in range(len(d))], "direccion": d})
+
+
+@pytest.mark.parametrize("q,esperado", [
+    ("Los Héroes parcela 39", ["LOS HEROES PC 39"]),
+    ("los heroes 50", ["LOTE 1 -A PC 50 -B LOS HEROES"]),
+    ("camino sara el carmen", ["CAM INT SARA EL CARMEN"]),
+    ("pasaje el pueblo 5875", ["PJE EL PUEBLO 5875"]),
+    ("caturras 1155", ["LS CATURRAS 01155"]),                  # ceros a la izquierda
+    ("santa ester sitio 3", ["STA ESTER ST 3"]),
+    ("hijuela 5 camino el bosque lote 2", ["HJ 5 CAM EL BOSQUE LT 2"]),
+    ("Manuel Infante 2270", ["J MANUEL INFANTE 2270 A BD 26"]),
+    ("pereira 335", []),                                        # el número debe calzar entero
+])
+def test_busqueda_por_direccion(direcciones, q, esperado):
+    assert ter.buscar_en(direcciones, q)["direccion"].to_list() == esperado
+
+
+def test_busqueda_ordena_la_direccion_exacta_primero(direcciones):
+    r = ter.buscar_en(direcciones, "avenida irarrazaval 366")["direccion"].to_list()
+    assert len(r) == 2 and "IRARRAZAVAL 366 376" not in r  # "AV" exigido: la dirección sin avenida no calza
+    r = ter.buscar_en(direcciones, "irarrazaval 366")["direccion"].to_list()
+    assert r[0] == "IRARRAZAVAL 366 376" and len(r) == 3
+
+
+def test_consulta_vacia_no_devuelve_todo(direcciones):
+    assert ter.buscar_en(direcciones, "calle de la").height == 0
+
+
+def test_tablas_de_ubicacion_y_textos():
+    assert ter.ubicacion("R")[0] == "Rural (código R)" and "Informaciones Previas" in ter.ubicacion("U")[1]
+    assert ter.ubicacion("E")[0].startswith("Probable extensión urbana")
+    assert ter.ubicacion(None)[0].startswith("Sin dato")

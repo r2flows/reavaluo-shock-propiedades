@@ -43,6 +43,7 @@ SALIDA = ROOT / "privado" / "preinformes"
 SEMESTRES = ("2021_2", "2022_1", "2026_2")
 DESTINOS = {"H": "Habitacional", "C": "Comercio", "O": "Oficina", "L": "Bodega y estacionamiento", "Z": "Estacionamiento", "I": "Industria", "E": "Educación", "S": "Salud", "W": "Sitio eriazo", "A": "Agrícola", "G": "Hotel/motel", "D": "Deporte", "Q": "Culto", "P": "Administración pública", "T": "Transporte", "V": "Otros", "M": "Minería", "F": "Forestal", "B": "Agroindustrial"}
 ESC = {"S0": "Leve", "S2": "Moderado", "S1": "Fuerte"}
+UBICACION = {"U": "Urbano (código U)", "R": "Rural (código R)", "E": "Probable extensión urbana (código E, por confirmar)"}
 ANIO_MIN = 1950
 
 
@@ -251,6 +252,7 @@ dl{{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;font-size:.9
 <dl><dt>Rol SII</dt><dd>{e(rid)} (código de comuna SII {e(cod)})</dd>
 <dt>Dirección</dt><dd>{e(ult.get('direccion') or '—')}</dd>
 <dt>Destino</dt><dd>{e(DESTINOS.get(ult.get('destino'), ult.get('destino') or '—'))}</dd>
+<dt>Ubicación según el SII</dt><dd>{e(UBICACION.get(ult.get('cod_ubicacion') or '', '—'))}</dd>
 <dt>Superficie terreno</dt><dd>{ult.get('sup_terreno_m2') or '—'} m²</dd>
 <dt>Superficie construida</dt><dd>{comp.get('sup_construida_total') or '—'} m² · año de construcción {comp.get('anio_construccion_max') or '—'} · calidad {e(str(comp.get('clase_calidad_principal') or '—'))}</dd>
 <dt>Avalúo fiscal</dt><dd>{clp(ult.get('avaluo_total'))} (exento {clp(ult.get('avaluo_exento'))})</dd>

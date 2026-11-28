@@ -19,7 +19,7 @@ PADRE = ["padre_comuna", "padre_manzana", "padre_predio"]
 TABLAS = {
     **{f"staging/catastro/roles_{s}.parquet": (STAGING / "catastro" / f"roles_{s}.parquet", ["rol_id", "cod_comuna", "destino", "avaluo_total", "direccion"], "rol_id")
        for s in ("2021_2", "2022_1")},
-    "staging/catastro/roles_2026_2.parquet": (STAGING / "catastro" / "roles_2026_2.parquet", ["rol_id", "cod_comuna", "destino", "avaluo_total", "avaluo_exento", "contrib_semestral", "direccion", "sup_terreno_m2", *PADRE, *BC], "rol_id"),
+    "staging/catastro/roles_2026_2.parquet": (STAGING / "catastro" / "roles_2026_2.parquet", ["rol_id", "cod_comuna", "destino", "avaluo_total", "avaluo_exento", "contrib_semestral", "direccion", "sup_terreno_m2", "cod_ubicacion", *PADRE, *BC], "rol_id"),
     "staging/avaluo_componentes_2026_2.parquet": (STAGING / "avaluo_componentes_2026_2.parquet", ["rol_id", "cod_comuna", "sup_construida_total", "anio_construccion_max", "clase_calidad_principal", "copropiedad"], "rol_id"),
     "staging/contribucion_2026_2.parquet": (STAGING / "contribucion_2026_2.parquet", ["rol_id", "cod_comuna", "exencion_especial", "rebaja_obs", "exento_h_semestre"], "rol_id"),
     "marts/reavaluo2027_roles.parquet": (MARTS / "reavaluo2027_roles.parquet", ["rol_id", "cod_comuna", "contrib_teo", "contrib_neta_teo"] + [f"{p}_{e}" for e in ("S0", "S2", "S1") for p in ("avaluo_27", "contrib_27", "neta_27")], "rol_id"),
@@ -27,6 +27,11 @@ TABLAS = {
     "marts/auditoria_roles_2026_2.parquet": (MARTS / "auditoria_roles_2026_2.parquet", None, "rol_id"),
     "staging/catastro/lineas_2026_2.parquet": (STAGING / "catastro" / "lineas_2026_2.parquet", ["rol_id", "cod_comuna", "linea", "material", "calidad", "anio_construccion", "sup_construida", "condicion_especial"], "rol_id"),
     "staging/uf.parquet": (STAGING / "uf.parquet", None, None),
+    # Ficha de terreno (src.producto.terreno): serie agrícola vigente (Gran Santiago) y 2022-1S (resto de la RM)
+    "staging/catastro/agricola_roles_2026_2.parquet": (STAGING / "catastro" / "agricola_roles_2026_2.parquet", None, "rol_id"),
+    "staging/catastro/agricola_suelos_2026_2.parquet": (STAGING / "catastro" / "agricola_suelos_2026_2.parquet", ["rol_id", "cod_comuna", "cod_suelo", "sup_ha"], "rol_id"),
+    "staging/catastro/agricola_roles_2022_1.parquet": (STAGING / "catastro" / "agricola_roles_2022_1.parquet", None, "rol_id"),
+    "staging/catastro/agricola_suelos_2022_1.parquet": (STAGING / "catastro" / "agricola_suelos_2022_1.parquet", ["rol_id", "cod_comuna", "cod_suelo", "sup_ha"], "rol_id"),
     "staging/map_rol_linaje.parquet": (STAGING / "map_rol_linaje.parquet", None, "rol_id"),
     "staging/map_barrio.parquet": (STAGING / "map_barrio.parquet", ["cod_comuna", "manzana", "microbarrio_id", "barrio_id"], "cod_comuna"),
     "staging/f2890.parquet": (STAGING / "f2890.parquet", ["rol_id", "cod_comuna", "fecha_escritura", "fecha_inscripcion", "monto_uf_norm", "flag_inscripcion_antes_escritura"], "rol_id"),
@@ -72,7 +77,11 @@ def main() -> None:
         lf = pl.scan_parquet(src)
         if cols:
             lf = lf.select(cols)
-        if orden:
+        if rel.startswith("staging/catastro/agricola_") and rel.endswith("2022_1.parquet"):
+            lf = lf.filter((pl.col("cod_comuna") // 1000).is_between(13, 16))  # Región Metropolitana (códigos SII 13–16 mil)
+        elif rel.startswith("staging/catastro/agricola_"):
+            pass  # vigente: ya es solo el Gran Santiago descargado
+        elif orden:
             lf = lf.filter(pl.col("cod_comuna").is_in(GRAN_SANTIAGO))
         df = lf.collect()
         df = df.sort(orden) if orden else df

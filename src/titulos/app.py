@@ -23,6 +23,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from src.etl.common import REF
 from src.titulos import certificados as cert
 from src.producto import expediente as exp
+from src.producto import terreno as ter
 from src.titulos import preinforme as pi
 
 USUARIO = os.environ.get("PREINFORME_USUARIO", "")
@@ -82,7 +83,7 @@ button{{margin-top:18px;font:inherit;font-weight:600;padding:10px 18px;border:0;
 .caja{{background:var(--soft);border:1px solid var(--rule);border-radius:8px;padding:10px 14px;font-size:.88rem;color:var(--ink2)}}
 .err{{color:#b42318;font-weight:600}}
 </style></head><body>
-<p><a href="reclamo">Revisión de avalúo para dueños →</a></p>
+<p><a href="reclamo">Revisión de avalúo para dueños →</a> · <a href="terreno">Ficha de terreno y búsqueda por dirección →</a></p>
 <h1>Pre-informe de títulos</h1>
 <p class="caja">Ingresa un rol del Gran Santiago. Opcional: sube los certificados del Conservador (PDF) para cruzarlos con las transferencias informadas al SII. <b>Los certificados se procesan en memoria y no se guardan.</b></p>
 {error}
@@ -170,6 +171,83 @@ def reclamo(rol: str = Form(...), comuna: str = Form(...)) -> HTMLResponse:
     if d is None:
         return HTMLResponse(reclamo_inicio(f"El rol {rol} de {comuna} no está en el catastro 2021–2026 del Gran Santiago."), status_code=404)
     return HTMLResponse(exp.informe(d).replace("<body>", '<body><p><a href="reclamo">← Otro rol</a></p>', 1))
+
+
+PAGINA = """<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{titulo}</title><meta name="robots" content="noindex">
+<style>
+:root{{--ink:#101828;--ink2:#475467;--rule:#d0d5dd;--bg:#fff;--soft:#f9fafb;--acc:#1849a9}}
+@media (prefers-color-scheme:dark){{:root{{--ink:#f2f4f7;--ink2:#98a2b3;--rule:#344054;--bg:#0c111d;--soft:#161b26;--acc:#84adff}}}}
+body{{font:15px/1.5 system-ui,sans-serif;color:var(--ink);background:var(--bg);max-width:760px;margin:0 auto;padding:28px 16px}}
+h1{{font-size:1.4rem}} h2{{font-size:1.05rem;margin:1.6em 0 .4em;border-bottom:1px solid var(--rule);padding-bottom:4px}}
+label{{display:block;font-weight:600;margin:14px 0 4px}} small{{color:var(--ink2);font-weight:400}}
+input,select{{font:inherit;width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--soft);color:var(--ink)}}
+button{{font:inherit;font-weight:600;padding:8px 14px;border:0;border-radius:8px;background:var(--acc);color:#fff;cursor:pointer}}
+form.inline{{display:inline}} form.inline button{{padding:4px 10px;font-size:.85rem}}
+table{{border-collapse:collapse;width:100%;font-size:.88rem}} th,td{{text-align:left;padding:5px 8px;border-bottom:1px solid var(--rule);vertical-align:top}}
+td.n,th.n{{text-align:right;font-variant-numeric:tabular-nums}}
+dl{{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;font-size:.9rem}} dt{{color:var(--ink2)}}
+.caja{{background:var(--soft);border:1px solid var(--rule);border-radius:8px;padding:10px 14px;font-size:.88rem;color:var(--ink2)}}
+.nota{{font-size:.82rem;color:var(--ink2)}} .err{{color:#b42318;font-weight:600}}
+</style></head><body><p><a href="./">← Pre-informe de títulos</a> · <a href="terreno">Nueva búsqueda de terreno</a></p>{cuerpo}</body></html>"""
+
+
+def _comunas_terreno() -> list[tuple[int, str]]:
+    c = ter.comunas_con_datos()
+    return [(int(k), str(n).title()) for k, n in zip(c["cod_comuna"], c["nombre_sii"])]
+
+
+def _form_terreno(error: str = "", cod: int | None = None, q: str = "") -> str:
+    ops = "".join(f'<option value="{k}"{" selected" if k == cod else ""}>{html.escape(n)}</option>' for k, n in _comunas_terreno())
+    err = f'<p class="err">{html.escape(error)}</p>' if error else ""
+    return (f"<h1>Ficha de terreno</h1><p class='caja'>Busque por rol (manzana-predio) o por dirección. Muestra si el predio es urbano o rural según el SII, "
+            f"sus clases de suelo si es agrícola, superficie, avalúo y contribución. Gran Santiago: catastro 2026-2S; resto de la Región Metropolitana: predios agrícolas del catastro 2022-1S.</p>{err}"
+            f'<form method="post" action="terreno"><label for="cod">Comuna</label><select id="cod" name="cod" required>{ops}</select>'
+            f'<label for="q">Rol o dirección <small>(por ejemplo 1035-64, o «Los Héroes parcela 39»)</small></label>'
+            f'<input id="q" name="q" required maxlength="120" value="{html.escape(q)}" autocomplete="off"><p><button type="submit">Buscar</button></p></form>')
+
+
+@app.get("/terreno", response_class=HTMLResponse, dependencies=[Depends(autenticar)])
+def terreno_inicio() -> str:
+    return PAGINA.format(titulo="Ficha de terreno", cuerpo=_form_terreno())
+
+
+@app.post("/terreno", response_class=HTMLResponse, dependencies=[Depends(autenticar)])
+def terreno(cod: int = Form(...), q: str = Form(...)) -> HTMLResponse:
+    import re
+
+    nombres = dict(_comunas_terreno())
+    if cod not in nombres:
+        return HTMLResponse(PAGINA.format(titulo="Ficha de terreno", cuerpo=_form_terreno("Comuna sin datos.", None, q)), status_code=400)
+    q = q.strip()[:120]
+    if re.fullmatch(r"\d{1,5}-\d{1,5}", q):
+        m, p = q.split("-")
+        d = ter.ficha(f"{cod}-{int(m)}-{int(p)}")
+        if d is None:
+            return HTMLResponse(PAGINA.format(titulo="Ficha de terreno", cuerpo=_form_terreno(f"El rol {q} no está en los datos de {nombres[cod]}.", cod, q)), status_code=404)
+        extra = ""
+        import polars as pl
+
+        gs = pl.read_csv(REF / "comunas_cut.csv", separator=";")
+        cut = gs.filter(pl.col("cod_comuna") == cod)["nombre_mapa"].to_list()
+        if cut and gs.filter(pl.col("nombre_mapa") == cut[0]).height > 1:
+            cut = []  # Santiago tiene 3 códigos SII: el formulario por nombre de comuna podría abrir otro rol
+        if cut and d["semestre"] == "2026-2S":
+            campos = f'<input type="hidden" name="comuna" value="{html.escape(cut[0])}"><input type="hidden" name="rol" value="{int(m)}-{int(p)}">'
+            extra = (f'<h2>Más sobre este rol</h2><form class="inline" method="post" action="informe">{campos}<button>Pre-informe de títulos</button></form> '
+                     f'<form class="inline" method="post" action="reclamo">{campos}<button>Revisión de avalúo 2027</button></form>')
+        return HTMLResponse(PAGINA.format(titulo=f"Terreno · rol {d['rol_id']}", cuerpo=ter.html_ficha(d, nombres[cod]) + extra))
+    res = ter.buscar(cod, q)
+    if not res.height:
+        return HTMLResponse(PAGINA.format(titulo="Ficha de terreno", cuerpo=_form_terreno(f"Sin resultados para «{q}» en {nombres[cod]}. Pruebe con menos palabras o solo el nombre de la calle y el número.", cod, q)), status_code=404)
+    filas = "".join(
+        f'<tr><td>{html.escape(r["direccion"] or "—")}</td><td>{html.escape(r["rol_id"])}</td><td>{html.escape(pi.DESTINOS.get(r["destino"], r["destino"] or "—"))}</td><td>{html.escape(ter.ubicacion(r["cod_ubicacion"])[0].split(" (")[0])}</td>'
+        f'<td><form class="inline" method="post" action="terreno"><input type="hidden" name="cod" value="{cod}"><input type="hidden" name="q" value="{html.escape(r["rol_id"].split("-", 1)[1])}"><button>Ver ficha</button></form></td></tr>'
+        for r in res.iter_rows(named=True)
+    )
+    cuerpo = _form_terreno("", cod, q) + (f"<h2>{res.height} resultado(s){' (se muestran los primeros 30)' if res.height >= ter.MAX_RESULTADOS else ''}</h2>"
+                                           f"<table><thead><tr><th>Dirección</th><th>Rol</th><th>Destino</th><th>Ubicación SII</th><th></th></tr></thead><tbody>{filas}</tbody></table>")
+    return HTMLResponse(PAGINA.format(titulo="Ficha de terreno", cuerpo=cuerpo))
 
 
 def main() -> None:

@@ -1,0 +1,23 @@
+cod_suelo;descripcion;grupo;orden;fuente
+1R;Primera de riego;Riego;1;PDF estructura detalle catastral SII
+2R;Segunda de riego;Riego;2;PDF estructura detalle catastral SII
+3R;Tercera de riego;Riego;3;PDF estructura detalle catastral SII
+4R;Cuarta de riego;Riego;4;Presente en los datos, no figura en el PDF del SII (por confirmar)
+1;Clase 1 secano arable;Secano arable;5;PDF estructura detalle catastral SII
+2;Clase 2 secano arable;Secano arable;6;PDF estructura detalle catastral SII
+3;Clase 3 secano arable;Secano arable;7;PDF estructura detalle catastral SII
+4;Clase 4 secano arable;Secano arable;8;PDF estructura detalle catastral SII
+5;Clase 5 secano no arable;Secano no arable;9;PDF estructura detalle catastral SII
+6;Clase 6 secano no arable;Secano no arable;10;PDF estructura detalle catastral SII
+7;Clase 7 secano no arable;Secano no arable;11;PDF estructura detalle catastral SII
+8;Clase 8 secano no arable;Secano no arable;12;PDF estructura detalle catastral SII
+20;Clase especial de Magallanes (20);Magallanes;13;Presente solo en comunas de Magallanes, sin definición publicada por el SII (por confirmar)
+21;Clase especial de Magallanes (21);Magallanes;14;Presente solo en comunas de Magallanes, sin definición publicada por el SII (por confirmar)
+22;Clase especial de Magallanes (22);Magallanes;15;Presente solo en comunas de Magallanes, sin definición publicada por el SII (por confirmar)
+23;Clase especial de Magallanes (23);Magallanes;16;Presente solo en comunas de Magallanes, sin definición publicada por el SII (por confirmar)
+24;Clase especial de Magallanes (24);Magallanes;17;Presente solo en comunas de Magallanes, sin definición publicada por el SII (por confirmar)
+25;Clase especial de Magallanes (25);Magallanes;18;Presente solo en comunas de Magallanes, sin definición publicada por el SII (por confirmar)
+26;Clase especial de Magallanes (26);Magallanes;19;Presente solo en comunas de Magallanes, sin definición publicada por el SII (por confirmar)
+27;Clase especial de Magallanes (27);Magallanes;20;Presente solo en comunas de Magallanes, sin definición publicada por el SII (por confirmar)
+28;Clase especial de Magallanes (28);Magallanes;21;Presente solo en comunas de Magallanes, sin definición publicada por el SII (por confirmar)
+29;Clase especial de Magallanes (29);Magallanes;22;Presente solo en comunas de Magallanes, sin definición publicada por el SII (por confirmar)
