@@ -79,8 +79,8 @@ def test_servicio_abierto_cabeceras(monkeypatch):
     r = c.get("/")  # abierto desde el 28-11-2026
     assert r.status_code == 200 and "Pre-informe" in r.text
     assert r.headers["cache-control"] == "no-store" and "noindex" in r.headers["x-robots-tag"]
-    r = c.post("/informe", data={"rol": "abc", "comuna": "Santiago"})
-    assert r.status_code == 400
+    r = c.post("/informe", data={"rol": "zzqxw 99999", "comuna": "Santiago"})  # texto que no es rol: se busca como dirección
+    assert r.status_code == 404 and "Sin resultados" in r.text
 
 
 def test_rutas_abiertas_con_limite(monkeypatch):
