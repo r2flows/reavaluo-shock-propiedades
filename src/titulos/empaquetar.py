@@ -27,6 +27,7 @@ TABLAS = {
     "marts/auditoria_roles_2026_2.parquet": (MARTS / "auditoria_roles_2026_2.parquet", None, "rol_id"),
     "staging/catastro/lineas_2026_2.parquet": (STAGING / "catastro" / "lineas_2026_2.parquet", ["rol_id", "cod_comuna", "linea", "material", "calidad", "anio_construccion", "sup_construida", "condicion_especial"], "rol_id"),
     "staging/uf.parquet": (STAGING / "uf.parquet", None, None),
+    "marts/indice_spar_barrio.parquet": (MARTS / "indice_spar_barrio.parquet", None, "barrio_id"),
     # Ficha de terreno (src.producto.terreno): serie agrícola vigente (Gran Santiago) y 2022-1S (resto de la RM)
     "staging/catastro/agricola_roles_2026_2.parquet": (STAGING / "catastro" / "agricola_roles_2026_2.parquet", None, "rol_id"),
     "staging/catastro/agricola_suelos_2026_2.parquet": (STAGING / "catastro" / "agricola_suelos_2026_2.parquet", ["rol_id", "cod_comuna", "cod_suelo", "sup_ha"], "rol_id"),

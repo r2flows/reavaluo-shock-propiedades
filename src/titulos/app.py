@@ -28,6 +28,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from src.etl.common import REF
 from src.titulos import certificados as cert
 from src.producto import expediente as exp
+from src.producto import carpeta as car
 from src.producto import diligencia as dil
 from src.producto import terreno as ter
 from src.titulos import preinforme as pi
@@ -120,7 +121,7 @@ button{{margin-top:18px;font:inherit;font-weight:600;padding:10px 18px;border:0;
 .caja{{background:var(--soft);border:1px solid var(--rule);border-radius:8px;padding:10px 14px;font-size:.88rem;color:var(--ink2)}}
 .err{{color:#b42318;font-weight:600}}
 </style></head><body>
-<p><a href="reclamo">Revisión de avalúo para dueños →</a> · <a href="terreno">Ficha de terreno y búsqueda por dirección →</a></p>
+<p><a href="reclamo">Revisión de avalúo para dueños →</a> · <a href="terreno">Ficha de terreno y búsqueda por dirección →</a> · <a href="carpeta">Carpeta para corredores →</a></p>
 <h1>Pre-informe de títulos</h1>
 <p class="caja">Ingresa un rol del Gran Santiago. Opcional: sube los certificados del Conservador (PDF) para cruzarlos con las transferencias informadas al SII. <b>Los certificados se procesan en memoria y no se guardan.</b></p>
 {error}
@@ -228,7 +229,7 @@ dl{{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;font-size:.9
 .caja{{background:var(--soft);border:1px solid var(--rule);border-radius:8px;padding:10px 14px;font-size:.88rem;color:var(--ink2)}}
 .nota{{font-size:.82rem;color:var(--ink2)}} .err{{color:#b42318;font-weight:600}}
 .niv{{display:inline-block;color:#fff;font-size:.7rem;text-transform:uppercase;padding:1px 6px;border-radius:4px;margin-right:4px;white-space:nowrap}} ul.al li{{margin:.4em 0}}
-</style></head><body><p><a href="terreno">Nueva búsqueda de terreno</a> · <a href="reclamo">Revisión de avalúo 2027</a></p>{cuerpo}</body></html>"""
+</style></head><body><p><a href="terreno">Ficha de terreno</a> · <a href="carpeta">Carpeta para corredores</a> · <a href="reclamo">Revisión de avalúo 2027</a></p>{cuerpo}</body></html>"""
 
 
 def _comunas_terreno() -> list[tuple[int, str]]:
@@ -273,8 +274,11 @@ def terreno(cod: int = Form(...), q: str = Form(...)) -> HTMLResponse:
             cut = []  # Santiago tiene 3 códigos SII: el formulario por nombre de comuna podría abrir otro rol
         if cut and d["semestre"] == "2026-2S":
             campos = f'<input type="hidden" name="comuna" value="{html.escape(cut[0])}"><input type="hidden" name="rol" value="{int(m)}-{int(p)}">'
-            extra = (f'<h2>Más sobre este rol</h2><form class="inline" method="post" action="informe">{campos}<button>Pre-informe de títulos</button></form> '
+            extra = (f'<form class="inline" method="post" action="informe">{campos}<button>Pre-informe de títulos</button></form> '
                      f'<form class="inline" method="post" action="reclamo">{campos}<button>Revisión de avalúo 2027</button></form>')
+        boton = (f'<form class="inline" method="post" action="carpeta" enctype="multipart/form-data"><input type="hidden" name="cod" value="{cod}">'
+                 f'<input type="hidden" name="rol" value="{int(m)}-{int(p)}"><button>Carpeta para corredores (PDF)</button></form> ')
+        extra = "<h2>Más sobre este rol</h2>" + boton + extra
         return HTMLResponse(PAGINA.format(titulo=f"Terreno · rol {d['rol_id']}", cuerpo=ter.html_ficha(d, nombres[cod]) + dil.html_seccion(dil.evaluar(dil.cargar(d))) + extra))
     res = ter.buscar(cod, q)
     if not res.height:
@@ -287,6 +291,48 @@ def terreno(cod: int = Form(...), q: str = Form(...)) -> HTMLResponse:
     cuerpo = _form_terreno("", cod, q) + (f"<h2>{res.height} resultado(s){' (se muestran los primeros 30)' if res.height >= ter.MAX_RESULTADOS else ''}</h2>"
                                            f"<table><thead><tr><th>Dirección</th><th>Rol</th><th>Destino</th><th>Ubicación SII</th><th></th></tr></thead><tbody>{filas}</tbody></table>")
     return HTMLResponse(PAGINA.format(titulo="Ficha de terreno", cuerpo=cuerpo))
+
+
+def _form_carpeta(error: str = "", cod: int | None = None, rol: str = "", corredora: str = "") -> str:
+    ops = "".join(f'<option value="{k}"{" selected" if k == cod else ""}>{html.escape(n)}</option>' for k, n in _comunas_terreno())
+    err = f'<p class="err">{html.escape(error)}</p>' if error else ""
+    return (f"<h1>Carpeta de la propiedad</h1><p class='caja'>Para corredores y brokers: identificación, antifraude, historia de transferencias, valor, riesgos y trámites por organismo de un rol, "
+            f"en un documento que se imprime o guarda como PDF. Si no sabe el rol, búsquelo por dirección en la <a href='terreno'>ficha de terreno</a>.</p>{err}"
+            f'<form method="post" action="carpeta" enctype="multipart/form-data"><label for="cod">Comuna</label><select id="cod" name="cod" required>{ops}</select>'
+            f'<label for="rol">Rol <small>(manzana-predio, por ejemplo 1035-64)</small></label><input id="rol" name="rol" required pattern="\\d{{1,5}}-\\d{{1,5}}" value="{html.escape(rol)}" autocomplete="off">'
+            f'<label for="corredora">Preparado por <small>(opcional: nombre de la corredora, aparece en el encabezado)</small></label><input id="corredora" name="corredora" maxlength="80" value="{html.escape(corredora)}">'
+            f'<label for="rut">RUT del vendedor <small>(opcional: se compara con el certificado de dominio, en memoria; no se guarda)</small></label><input id="rut" name="rut" maxlength="14" autocomplete="off">'
+            f'<label for="pdf">Certificados del Conservador <small>(opcional: dominio vigente y gravámenes, hasta 8 PDF de 12 MB; se procesan en memoria y no se guardan)</small></label>'
+            f'<input id="pdf" name="archivos" type="file" accept="application/pdf" multiple><p><button type="submit">Armar carpeta</button></p></form>')
+
+
+@app.get("/carpeta", response_class=HTMLResponse, dependencies=[Depends(limitar)])
+def carpeta_inicio() -> str:
+    return PAGINA.format(titulo="Carpeta de la propiedad", cuerpo=_form_carpeta())
+
+
+@app.post("/carpeta", response_class=HTMLResponse, dependencies=[Depends(limitar)])
+async def carpeta(request: Request, cod: int = Form(...), rol: str = Form(...), corredora: str = Form(""), rut: str = Form(""),
+                  archivos: list[UploadFile] = File(default=[])) -> HTMLResponse:
+    import re
+
+    nombres = dict(_comunas_terreno())
+    rol = rol.strip()
+    if cod not in nombres or not re.fullmatch(r"\d{1,5}-\d{1,5}", rol):
+        return HTMLResponse(PAGINA.format(titulo="Carpeta de la propiedad", cuerpo=_form_carpeta("Revise la comuna y el rol (manzana-predio).", cod, rol, corredora)), status_code=400)
+    m, p = rol.split("-")
+    lecturas = None
+    subidos = [a for a in archivos if a.filename][: cert.MAX_ARCHIVOS]
+    if subidos:
+        limitar_subidas(request)
+        datos = [(a.filename, await a.read(cert.MAX_BYTES + 1)) for a in subidos]
+        lecturas = cert.leer_archivos(datos)
+        del datos
+    cuerpo = car.armar(f"{cod}-{int(m)}-{int(p)}", nombres[cod], corredora.strip()[:80], lecturas, rut.strip() or None)
+    del lecturas, rut
+    if cuerpo is None:
+        return HTMLResponse(PAGINA.format(titulo="Carpeta de la propiedad", cuerpo=_form_carpeta(f"El rol {rol} no está en los datos de {nombres[cod]}.", cod, rol, corredora)), status_code=404)
+    return HTMLResponse(cuerpo)
 
 
 def main() -> None:

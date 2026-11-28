@@ -18,6 +18,7 @@ from __future__ import annotations
 import html
 import io
 import re
+import datetime as dt
 from dataclasses import dataclass, field
 
 import polars as pl
@@ -38,6 +39,28 @@ RE_CLP = re.compile(r"\$\s*(\d{1,3}(?:\.\d{3})+)")
 # En singular: «Registro de Hipotecas y Gravámenes» o «Interdicciones y Prohibiciones» son nombres de registros, no cargas
 CARGAS = [r"\bhipoteca\b", r"\bprohibici[óo]n\b", r"\bembargo\b", r"\binterdicci[óo]n\b", r"\blitigio\b", r"\bservidumbre\b", r"\busufructo\b", r"medida precautoria", r"bien familiar"]
 RE_NEG = re.compile(r"(no\s+(registra|existe[n]?|tiene|hay|aparece[n]?|se\s+encuentra[n]?)|sin|ninguna?)\s+[a-záéíóúñ\s]{0,25}$")
+MESES = {m: i for i, m in enumerate(["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"], 1)}
+RE_FECHA_TXT = re.compile(r"\b(\d{1,2})\s+de\s+(" + "|".join(MESES) + r"|setiembre)\s+(?:de|del)\s+(\d{4})\b", re.I)
+RE_FECHA_NUM = re.compile(r"\b(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})\b")
+RE_CODIGO = re.compile(r"c[óo]digo\s+(?:de\s+)?verificaci[óo]n\s*(?:n[°º]\.?)?\s*:?\s*([A-Za-z0-9][A-Za-z0-9\-]{5,40})", re.I)
+
+
+def fechas(texto: str) -> list[dt.date]:
+    out = []
+    for d, m, a in RE_FECHA_TXT.findall(texto):
+        mes = 9 if m.lower() == "setiembre" else MESES[m.lower()]
+        try:
+            out.append(dt.date(int(a), mes, int(d)))
+        except ValueError:
+            pass
+    for d, m, a in RE_FECHA_NUM.findall(texto):
+        try:
+            out.append(dt.date(int(a), int(m), int(d)))
+        except ValueError:
+            pass
+    return out
+
+
 RE_SIN = re.compile(r"no\s+(?:se\s+encuentra|registra|tiene|existe[n]?|aparece[n]?|hay)\s+(?:inscrit[ao]s?\s+)?(?:ninguna?\s+)?(?:hipotecas?|gravámenes|prohibiciones|embargos)", re.I)
 
 
@@ -75,6 +98,8 @@ class Lectura:
     cargas: list[str] = field(default_factory=list)
     sin_cargas: bool = False
     vigente: bool = False
+    fecha_emision: "dt.date | None" = None  # la fecha más reciente del texto (≤ hoy): aproxima la emisión
+    codigo_verificacion: str | None = None
 
 
 def texto_pdf(datos: bytes) -> str:
@@ -129,6 +154,11 @@ def leer_texto(archivo: str, texto: str) -> Lectura:
             L.cargas.append(plano[max(0, m.start() - 40):m.end() + 110].strip())
             break
     L.sin_cargas = bool(RE_SIN.search(plano))
+    hoy = dt.date.today()
+    fs = [f for f in fechas(plano) if f <= hoy]
+    L.fecha_emision = max(fs) if fs else None
+    m = RE_CODIGO.search(plano)
+    L.codigo_verificacion = m.group(1) if m else None
     return L
 
 
