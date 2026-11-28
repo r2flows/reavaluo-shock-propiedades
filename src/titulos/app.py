@@ -296,10 +296,10 @@ def terreno(cod: int = Form(...), q: str = Form(...)) -> HTMLResponse:
 def _form_carpeta(error: str = "", cod: int | None = None, rol: str = "", corredora: str = "") -> str:
     ops = "".join(f'<option value="{k}"{" selected" if k == cod else ""}>{html.escape(n)}</option>' for k, n in _comunas_terreno())
     err = f'<p class="err">{html.escape(error)}</p>' if error else ""
-    return (f"<h1>Carpeta de la propiedad</h1><p class='caja'>Para corredores y brokers: identificación, antifraude, historia de transferencias, valor, riesgos y trámites por organismo de un rol, "
-            f"en un documento que se imprime o guarda como PDF. Si no sabe el rol, búsquelo por dirección en la <a href='terreno'>ficha de terreno</a>.</p>{err}"
+    return (f"<h1>Carpeta de la propiedad</h1><p class='caja'>Para corredores y brokers: identificación, antifraude, historia de transferencias, valor, riesgos y trámites por organismo de una propiedad, "
+            f"en un documento que se imprime o guarda como PDF. Puede buscarla por rol o por dirección.</p>{err}"
             f'<form method="post" action="carpeta" enctype="multipart/form-data"><label for="cod">Comuna</label><select id="cod" name="cod" required>{ops}</select>'
-            f'<label for="rol">Rol <small>(manzana-predio, por ejemplo 1035-64)</small></label><input id="rol" name="rol" required pattern="\\d{{1,5}}-\\d{{1,5}}" value="{html.escape(rol)}" autocomplete="off">'
+            f'<label for="rol">Rol o dirección <small>(rol como manzana-predio, por ejemplo 1035-64, o la dirección, por ejemplo «Los Héroes parcela 39»)</small></label><input id="rol" name="rol" required maxlength="120" value="{html.escape(rol)}" autocomplete="off">'
             f'<label for="corredora">Preparado por <small>(opcional: nombre de la corredora, aparece en el encabezado)</small></label><input id="corredora" name="corredora" maxlength="80" value="{html.escape(corredora)}">'
             f'<label for="rut">RUT del vendedor <small>(opcional: se compara con el certificado de dominio, en memoria; no se guarda)</small></label><input id="rut" name="rut" maxlength="14" autocomplete="off">'
             f'<label for="pdf">Certificados del Conservador <small>(opcional: dominio vigente y gravámenes, hasta 8 PDF de 12 MB; se procesan en memoria y no se guardan)</small></label>'
@@ -317,9 +317,25 @@ async def carpeta(request: Request, cod: int = Form(...), rol: str = Form(...), 
     import re
 
     nombres = dict(_comunas_terreno())
-    rol = rol.strip()
-    if cod not in nombres or not re.fullmatch(r"\d{1,5}-\d{1,5}", rol):
-        return HTMLResponse(PAGINA.format(titulo="Carpeta de la propiedad", cuerpo=_form_carpeta("Revise la comuna y el rol (manzana-predio).", cod, rol, corredora)), status_code=400)
+    rol = rol.strip()[:120]
+    if cod not in nombres or not rol:
+        return HTMLResponse(PAGINA.format(titulo="Carpeta de la propiedad", cuerpo=_form_carpeta("Elija la comuna e ingrese un rol o una dirección.", cod, rol, corredora)), status_code=400)
+    if not re.fullmatch(r"\d{1,5}-\d{1,5}", rol):
+        # Dirección → rol con el buscador de la ficha de terreno. Con un solo resultado se arma la carpeta directo.
+        res = ter.buscar(cod, rol)
+        if not res.height:
+            return HTMLResponse(PAGINA.format(titulo="Carpeta de la propiedad", cuerpo=_form_carpeta(f"Sin resultados para «{rol}» en {nombres[cod]}. Pruebe con el nombre de la calle y el número, o con el rol.", cod, rol, corredora)), status_code=404)
+        if res.height > 1:
+            filas = "".join(
+                f'<tr><td>{html.escape(r["direccion"] or "—")}</td><td>{html.escape(r["rol_id"])}</td><td>{html.escape(pi.DESTINOS.get(r["destino"], r["destino"] or "—"))}</td>'
+                f'<td><form class="inline" method="post" action="carpeta" enctype="multipart/form-data"><input type="hidden" name="cod" value="{cod}">'
+                f'<input type="hidden" name="rol" value="{html.escape(r["rol_id"].split("-", 1)[1])}"><input type="hidden" name="corredora" value="{html.escape(corredora[:80])}"><button>Armar carpeta</button></form></td></tr>'
+                for r in res.iter_rows(named=True))
+            aviso = "<p class='nota'>El RUT del vendedor y los certificados no se trasladan a este paso (no se guardan): vuelva a ingresarlos en el formulario con el rol elegido si los necesita.</p>" if (rut.strip() or any(a.filename for a in archivos)) else ""
+            cuerpo = _form_carpeta("", cod, rol, corredora) + (f"<h2>{res.height} propiedad(es) coinciden con «{html.escape(rol)}»{' (se muestran las primeras 30)' if res.height >= ter.MAX_RESULTADOS else ''}</h2>{aviso}"
+                                                               f"<table><thead><tr><th>Dirección</th><th>Rol</th><th>Destino</th><th></th></tr></thead><tbody>{filas}</tbody></table>")
+            return HTMLResponse(PAGINA.format(titulo="Carpeta de la propiedad", cuerpo=cuerpo))
+        rol = res["rol_id"][0].split("-", 1)[1]
     m, p = rol.split("-")
     lecturas = None
     subidos = [a for a in archivos if a.filename][: cert.MAX_ARCHIVOS]

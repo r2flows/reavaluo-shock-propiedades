@@ -65,3 +65,29 @@ def test_tramites_segun_alertas():
     al = [dg.Alerta("herencia_probable", "dominio", "revisar", ""), dg.Alerta("suelo_riego", "agua", "revisar", "")]
     ids = {t[0] for t in ca.tramites(al, copropiedad=True)}
     assert {"pe", "ieh", "agua", "dga", "gc"} <= ids and "sag" not in ids
+
+
+def test_carpeta_acepta_direccion(monkeypatch):
+    pytest.importorskip("fastapi")
+    import importlib
+
+    import polars as pl
+    from fastapi.testclient import TestClient
+
+    monkeypatch.setenv("PREINFORME_USUARIO", "prueba")
+    monkeypatch.setenv("PREINFORME_CLAVE", "clave-de-prueba-larga-123")
+    from src.titulos import app as modapp
+
+    importlib.reload(modapp)
+    monkeypatch.setattr(modapp, "_comunas_terreno", lambda: [(14109, "Maipu")])
+    dos = pl.DataFrame({"rol_id": ["14109-1035-64", "14109-1035-65"], "direccion": ["LOS HEROES PC 39", "LOS HEROES PC 39 A"], "destino": ["W", "W"], "cod_ubicacion": ["R", "R"]})
+    monkeypatch.setattr(modapp.ter, "buscar", lambda cod, q: dos if "heroes" in q.lower() else dos.head(0))
+    monkeypatch.setattr(modapp.car, "armar", lambda rid, comuna, *a, **k: f"<html>CARPETA {rid}</html>")
+    c = TestClient(modapp.app)
+    r = c.post("/carpeta", data={"cod": "14109", "rol": "los heroes parcela 39"})
+    assert r.status_code == 200 and "2 propiedad(es) coinciden" in r.text and 'value="1035-65"' in r.text
+    monkeypatch.setattr(modapp.ter, "buscar", lambda cod, q: dos.head(1))
+    assert c.post("/carpeta", data={"cod": "14109", "rol": "los heroes 39"}).text == "<html>CARPETA 14109-1035-64</html>"
+    assert c.post("/carpeta", data={"cod": "14109", "rol": "1035-64"}).text == "<html>CARPETA 14109-1035-64</html>"
+    monkeypatch.setattr(modapp.ter, "buscar", lambda cod, q: dos.head(0))
+    assert c.post("/carpeta", data={"cod": "14109", "rol": "calle inexistente 1"}).status_code == 404
