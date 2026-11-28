@@ -22,6 +22,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from src.etl.common import REF
 from src.titulos import certificados as cert
+from src.producto import expediente as exp
 from src.titulos import preinforme as pi
 
 USUARIO = os.environ.get("PREINFORME_USUARIO", "")
@@ -81,6 +82,7 @@ button{{margin-top:18px;font:inherit;font-weight:600;padding:10px 18px;border:0;
 .caja{{background:var(--soft);border:1px solid var(--rule);border-radius:8px;padding:10px 14px;font-size:.88rem;color:var(--ink2)}}
 .err{{color:#b42318;font-weight:600}}
 </style></head><body>
+<p><a href="reclamo">Revisión de avalúo para dueños →</a></p>
 <h1>Pre-informe de títulos</h1>
 <p class="caja">Ingresa un rol del Gran Santiago. Opcional: sube los certificados del Conservador (PDF) para cruzarlos con las transferencias informadas al SII. <b>Los certificados se procesan en memoria y no se guardan.</b></p>
 {error}
@@ -92,6 +94,31 @@ button{{margin-top:18px;font:inherit;font-weight:600;padding:10px 18px;border:0;
 <label for="pdf">Certificados del Conservador <small>(opcional, hasta 8 PDF de 12 MB)</small></label>
 <input id="pdf" name="archivos" type="file" accept="application/pdf" multiple>
 <button type="submit">Generar pre-informe</button>
+</form></body></html>"""
+
+
+FORM_RECLAMO = """<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Revisión de avalúo</title><meta name="robots" content="noindex">
+<style>
+:root{{--ink:#101828;--ink2:#475467;--rule:#d0d5dd;--bg:#fff;--soft:#f9fafb;--acc:#1849a9}}
+@media (prefers-color-scheme:dark){{:root{{--ink:#f2f4f7;--ink2:#98a2b3;--rule:#344054;--bg:#0c111d;--soft:#161b26;--acc:#84adff}}}}
+body{{font:15px/1.5 system-ui,sans-serif;color:var(--ink);background:var(--bg);max-width:640px;margin:0 auto;padding:28px 16px}}
+h1{{font-size:1.4rem}} label{{display:block;font-weight:600;margin:14px 0 4px}} small{{color:var(--ink2);font-weight:400}}
+input,select{{font:inherit;width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--soft);color:var(--ink)}}
+button{{margin-top:18px;font:inherit;font-weight:600;padding:10px 18px;border:0;border-radius:8px;background:var(--acc);color:#fff;cursor:pointer}}
+.caja{{background:var(--soft);border:1px solid var(--rule);border-radius:8px;padding:10px 14px;font-size:.88rem;color:var(--ink2)}}
+.err{{color:#b42318;font-weight:600}}
+</style></head><body>
+<p><a href="./">← Pre-informe de títulos</a></p>
+<h1>Revisión de avalúo y contribuciones 2027</h1>
+<p class="caja">Para dueños: cuánto pagaría en 2027 en tres escenarios, si hay indicios de error técnico en su avalúo (superficie, clasificación o cálculo), ventas comparables y cómo reclamar.</p>
+{error}
+<form method="post" action="reclamo">
+<label for="comuna">Comuna</label>
+<select id="comuna" name="comuna" required>{opciones}</select>
+<label for="rol">Rol <small>(manzana-predio, por ejemplo 152-779)</small></label>
+<input id="rol" name="rol" required pattern="\\d{{1,5}}-\\d{{1,5}}" inputmode="numeric" autocomplete="off">
+<button type="submit">Revisar avalúo</button>
 </form></body></html>"""
 
 
@@ -125,6 +152,24 @@ async def informe(rol: str = Form(...), comuna: str = Form(...), archivos: list[
         del lecturas
     cuerpo = pi.informe(d, extra).replace("<body>", '<body><p><a href="./">← Otro rol</a></p>', 1)
     return HTMLResponse(cuerpo)
+
+
+@app.get("/reclamo", response_class=HTMLResponse, dependencies=[Depends(autenticar)])
+def reclamo_inicio(error: str = "") -> str:
+    ops = "".join(f"<option>{html.escape(c)}</option>" for c in comunas())
+    return FORM_RECLAMO.format(opciones=ops, error=f'<p class="err">{html.escape(error)}</p>' if error else "")
+
+
+@app.post("/reclamo", response_class=HTMLResponse, dependencies=[Depends(autenticar)])
+def reclamo(rol: str = Form(...), comuna: str = Form(...)) -> HTMLResponse:
+    try:
+        cands = pi.resolver(rol, comuna)
+    except SystemExit as e:
+        return HTMLResponse(reclamo_inicio(str(e)), status_code=400)
+    d = exp.leer(cands)
+    if d is None:
+        return HTMLResponse(reclamo_inicio(f"El rol {rol} de {comuna} no está en el catastro 2021–2026 del Gran Santiago."), status_code=404)
+    return HTMLResponse(exp.informe(d).replace("<body>", '<body><p><a href="reclamo">← Otro rol</a></p>', 1))
 
 
 def main() -> None:

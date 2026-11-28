@@ -76,6 +76,10 @@ Ninguna fase avanza sin cumplir su criterio de aceptación.
    - **Criterio:** superar la línea base de momentum fuera de muestra, neto de costos de transacción del 2–4%.
 8. **Predictor del reavalúo 2027.** Metodología del SII calibrada en 2022 → avalúo proyectado por rol y ranking de exposición al shock.
 9. **Captura de oportunidades** (§ siguiente).
+9-bis. **Producto para dueños: revisión de avalúo y contribuciones 2027** (`src/producto/`, servicio privado `/reclamo`). Replica la apelación de avalúo de EE.UU. (Ownwell, AppealDesk) adaptada a las causales técnicas del art. 149 del Código Tributario. Ver `docs/benchmark_internacional.md`.
+   - Auditor por rol: terreno/m² aislado sobre el de la manzana y avalúo/m² aislado sobre el de unidades iguales del edificio (fuertes); calidad y aumento de superficie (datos a verificar).
+   - Expediente: estimación 2027 con gradualidad, líneas de construcción valoradas, comparables depurados, equidad por quintil y pasos para reclamar.
+   - **Criterio:** backtest 2022 con precisión de las señales fuertes ≥ 3 veces la tasa base de bajas del SII sin cambio físico (**cumplido:** 5,4× y 4,2×); error mediano del estimador < 1% (**cumplido:** 0,025%); revisión legal de 10 expedientes (**pendiente**).
 
 ## Captura de oportunidades
 | Bloque | Elemento | Fase |
@@ -131,5 +135,7 @@ Esquema común: `ratio_ia`, ciclo de reavalúo y nivel legal de tasación. Candi
 - [x] **Fase 6 (23-11-2026):** P3 nulo → se abandona el producto "vendedor forzado". P1 confirma reversión de la brecha (−1,2 pp de retorno a 3 años por +10% de brecha; p perm. 0,0015), pero no se replica en 2021. Ver `docs/fase6_resultados_p1_y_resumen.md`.
 - [x] **R1 (réplica en 33 comunas nuevas del Gran Santiago): no confirma H1.1** (β −0,03; p perm. 0,21). La brecha no es un predictor útil de plusvalía. Se reorienta el producto: estimador y reclamo de contribuciones, comparables depurados y predictor del reavalúo 2027.
 - [x] **Fase 7:** predictor del reavalúo 2027 por escenarios (S0 +1%, S2 +13%, S1 +26% real). Backtest 2022: error por rol de 8,9% con el nivel correcto; entre comunas el SII traspasa ~45% de la brecha. Ver `docs/fase7_reavaluo2027.md`.
+- [x] **Fase 9-bis (28-11-2026):** auditor de avalúo y expediente para dueños. 20.527 roles con señal en el Gran Santiago; las señales fuertes anticiparon bajas del SII 4–5 veces más que la tasa base en el backtest 2022 (precisión absoluta 1,4–1,7%). Las señales débiles no predicen y no se muestran. Desviación registrada: el criterio del estimador "≥ 85% sin rebaja" era tautológico y se reemplaza por el error mediano. Ver `docs/benchmark_internacional.md`.
+- [ ] [verificar] Causales y plazos de reclamo del reavalúo 2027 tras la Ley 21.713, con un abogado tributario, antes de ofrecer el expediente a dueños.
 - [ ] Fase 5: el índice por barrio es ruidoso (retorno a 3 años ±13%). La primera mirada no muestra que la brecha prediga retornos (corr. −0,03). En la Fase 6, evitar correlaciones mecánicas: las variables y el objetivo no pueden compartir ventas ni años extremos.
 - [ ] Barrios inferidos por numeración de manzanas: validar la contigüidad con la cartografía del SII.

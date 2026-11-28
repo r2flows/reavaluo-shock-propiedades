@@ -38,13 +38,18 @@ def main() -> None:
         shutil.rmtree(BUILD)
     (BUILD / "src" / "etl" / "ref").mkdir(parents=True)
     (BUILD / "src" / "titulos").mkdir()
-    for f in ("src/__init__.py", "src/etl/__init__.py", "src/etl/common.py"):
+    (BUILD / "src" / "features").mkdir()
+    (BUILD / "src" / "producto").mkdir()
+    for f in ("src/__init__.py", "src/etl/__init__.py", "src/etl/common.py", "src/features/__init__.py",
+              "src/features/avaluo_construccion.py", "src/features/contribucion.py"):
         src = ROOT / f
         (BUILD / f).write_bytes(src.read_bytes() if src.exists() else b"")
-    for f in ("comunas_cut.csv", "cbr_por_comuna.csv", "comunas.csv"):
+    for f in ("comunas_cut.csv", "cbr_por_comuna.csv", "comunas.csv", "vuc_2022.csv", "vuc_2018.csv", "factor_comunal.csv", "parametros_impuesto.csv"):
         shutil.copy(REF / f, BUILD / "src" / "etl" / "ref" / f)
     for f in ("__init__.py", "app.py", "preinforme.py", "certificados.py"):
         shutil.copy(ROOT / "src" / "titulos" / f, BUILD / "src" / "titulos" / f)
+    for f in ("__init__.py", "auditoria_rol.py", "comparables.py", "estimador2027.py", "expediente.py"):
+        shutil.copy(ROOT / "src" / "producto" / f, BUILD / "src" / "producto" / f)
     shutil.copytree(datos, BUILD / "datos")
     (BUILD / "requirements.txt").write_text(REQ)
     (BUILD / "Dockerfile").write_text(DOCKERFILE)
