@@ -1,4 +1,8 @@
-"""Servicio privado de pre-informes de títulos (FastAPI). Requiere clave.
+"""Servicio de pre-informes de títulos (FastAPI).
+
+Acceso (decisión del usuario, 28-11-2026): /terreno y /reclamo son abiertos, con un límite de consultas por IP para
+impedir la extracción masiva. El pre-informe de títulos (/ y /informe), que lee certificados del Conservador con
+datos de dueños, sigue con clave (CLAUDE.md).
 
 Variables de entorno:
   PREINFORME_USUARIO, PREINFORME_CLAVE   credenciales de acceso (HTTP Basic sobre HTTPS). Sin ellas el servicio no parte.
@@ -39,6 +43,22 @@ VENTANA, MAX_FALLOS = 900, 10
 
 def ip(req: Request) -> str:
     return (req.headers.get("x-forwarded-for") or (req.client.host if req.client else "?")).split(",")[0].strip()
+
+
+CONSULTAS: dict[str, deque] = defaultdict(deque)
+VENTANA_PUBLICA, MAX_CONSULTAS = 600, 60  # 60 consultas cada 10 minutos por IP en las rutas abiertas
+
+
+def limitar(req: Request) -> None:
+    """Rutas abiertas: limita las consultas por IP (sin registrar nada) para que no se pueda extraer la base."""
+    q, ahora = CONSULTAS[ip(req)], time.time()
+    while q and ahora - q[0] > VENTANA_PUBLICA:
+        q.popleft()
+    if len(q) >= MAX_CONSULTAS:
+        raise HTTPException(429, "Demasiadas consultas; espere unos minutos.")
+    q.append(ahora)
+    if len(CONSULTAS) > 50_000:  # evita que el diccionario crezca sin límite
+        CONSULTAS.clear()
 
 
 def autenticar(req: Request, cred: HTTPBasicCredentials = Depends(basic)) -> None:
@@ -110,7 +130,7 @@ button{{margin-top:18px;font:inherit;font-weight:600;padding:10px 18px;border:0;
 .caja{{background:var(--soft);border:1px solid var(--rule);border-radius:8px;padding:10px 14px;font-size:.88rem;color:var(--ink2)}}
 .err{{color:#b42318;font-weight:600}}
 </style></head><body>
-<p><a href="./">← Pre-informe de títulos</a></p>
+<p><a href="terreno">Ficha de terreno →</a></p>
 <h1>Revisión de avalúo y contribuciones 2027</h1>
 <p class="caja">Para dueños: cuánto pagaría en 2027 en tres escenarios, si hay indicios de error técnico en su avalúo (superficie, clasificación o cálculo), ventas comparables y cómo reclamar.</p>
 {error}
@@ -155,13 +175,13 @@ async def informe(rol: str = Form(...), comuna: str = Form(...), archivos: list[
     return HTMLResponse(cuerpo)
 
 
-@app.get("/reclamo", response_class=HTMLResponse, dependencies=[Depends(autenticar)])
+@app.get("/reclamo", response_class=HTMLResponse, dependencies=[Depends(limitar)])
 def reclamo_inicio(error: str = "") -> str:
     ops = "".join(f"<option>{html.escape(c)}</option>" for c in comunas())
     return FORM_RECLAMO.format(opciones=ops, error=f'<p class="err">{html.escape(error)}</p>' if error else "")
 
 
-@app.post("/reclamo", response_class=HTMLResponse, dependencies=[Depends(autenticar)])
+@app.post("/reclamo", response_class=HTMLResponse, dependencies=[Depends(limitar)])
 def reclamo(rol: str = Form(...), comuna: str = Form(...)) -> HTMLResponse:
     try:
         cands = pi.resolver(rol, comuna)
@@ -189,7 +209,7 @@ td.n,th.n{{text-align:right;font-variant-numeric:tabular-nums}}
 dl{{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;font-size:.9rem}} dt{{color:var(--ink2)}}
 .caja{{background:var(--soft);border:1px solid var(--rule);border-radius:8px;padding:10px 14px;font-size:.88rem;color:var(--ink2)}}
 .nota{{font-size:.82rem;color:var(--ink2)}} .err{{color:#b42318;font-weight:600}}
-</style></head><body><p><a href="./">← Pre-informe de títulos</a> · <a href="terreno">Nueva búsqueda de terreno</a></p>{cuerpo}</body></html>"""
+</style></head><body><p><a href="terreno">Nueva búsqueda de terreno</a> · <a href="reclamo">Revisión de avalúo 2027</a></p>{cuerpo}</body></html>"""
 
 
 def _comunas_terreno() -> list[tuple[int, str]]:
@@ -207,12 +227,12 @@ def _form_terreno(error: str = "", cod: int | None = None, q: str = "") -> str:
             f'<input id="q" name="q" required maxlength="120" value="{html.escape(q)}" autocomplete="off"><p><button type="submit">Buscar</button></p></form>')
 
 
-@app.get("/terreno", response_class=HTMLResponse, dependencies=[Depends(autenticar)])
+@app.get("/terreno", response_class=HTMLResponse, dependencies=[Depends(limitar)])
 def terreno_inicio() -> str:
     return PAGINA.format(titulo="Ficha de terreno", cuerpo=_form_terreno())
 
 
-@app.post("/terreno", response_class=HTMLResponse, dependencies=[Depends(autenticar)])
+@app.post("/terreno", response_class=HTMLResponse, dependencies=[Depends(limitar)])
 def terreno(cod: int = Form(...), q: str = Form(...)) -> HTMLResponse:
     import re
 
@@ -234,7 +254,7 @@ def terreno(cod: int = Form(...), q: str = Form(...)) -> HTMLResponse:
             cut = []  # Santiago tiene 3 códigos SII: el formulario por nombre de comuna podría abrir otro rol
         if cut and d["semestre"] == "2026-2S":
             campos = f'<input type="hidden" name="comuna" value="{html.escape(cut[0])}"><input type="hidden" name="rol" value="{int(m)}-{int(p)}">'
-            extra = (f'<h2>Más sobre este rol</h2><form class="inline" method="post" action="informe">{campos}<button>Pre-informe de títulos</button></form> '
+            extra = (f'<h2>Más sobre este rol</h2><form class="inline" method="post" action="informe">{campos}<button>Pre-informe de títulos (con clave)</button></form> '
                      f'<form class="inline" method="post" action="reclamo">{campos}<button>Revisión de avalúo 2027</button></form>')
         return HTMLResponse(PAGINA.format(titulo=f"Terreno · rol {d['rol_id']}", cuerpo=ter.html_ficha(d, nombres[cod]) + extra))
     res = ter.buscar(cod, q)

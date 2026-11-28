@@ -88,3 +88,23 @@ def test_servicio_exige_clave(monkeypatch):
     for _ in range(12):
         c.get("/", auth=("prueba", "mala"))
     assert c.get("/", auth=("prueba", "clave-de-prueba-larga-123")).status_code == 429
+
+
+def test_rutas_abiertas_con_limite(monkeypatch):
+    pytest.importorskip("fastapi")
+    from fastapi.testclient import TestClient
+
+    monkeypatch.setenv("PREINFORME_USUARIO", "prueba")
+    monkeypatch.setenv("PREINFORME_CLAVE", "clave-de-prueba-larga-123")
+    import importlib
+
+    from src.titulos import app as modapp
+
+    importlib.reload(modapp)
+    c = TestClient(modapp.app)
+    r = c.get("/reclamo")  # abierta: sin clave
+    assert r.status_code == 200 and "Revisión de avalúo" in r.text
+    assert c.post("/informe", data={"rol": "1-1", "comuna": "Santiago"}).status_code == 401  # títulos sigue con clave
+    for _ in range(modapp.MAX_CONSULTAS - 1):
+        c.get("/reclamo")
+    assert c.get("/reclamo").status_code == 429
