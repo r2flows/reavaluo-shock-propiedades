@@ -91,3 +91,30 @@ def test_carpeta_acepta_direccion(monkeypatch):
     assert c.post("/carpeta", data={"cod": "14109", "rol": "1035-64"}).text == "<html>CARPETA 14109-1035-64</html>"
     monkeypatch.setattr(modapp.ter, "buscar", lambda cod, q: dos.head(0))
     assert c.post("/carpeta", data={"cod": "14109", "rol": "calle inexistente 1"}).status_code == 404
+
+
+def test_preinforme_acepta_direccion(monkeypatch):
+    pytest.importorskip("fastapi")
+    import importlib
+
+    import polars as pl
+    from fastapi.testclient import TestClient
+
+    monkeypatch.setenv("PREINFORME_USUARIO", "prueba")
+    monkeypatch.setenv("PREINFORME_CLAVE", "clave-de-prueba-larga-123")
+    from src.titulos import app as modapp
+
+    importlib.reload(modapp)
+    varios = pl.DataFrame({"rol_id": ["15105-2-3", "15105-3951-592"], "direccion": ["IRARRAZAVAL 366 376", "AV IRARRAZAVAL 3785 BD 366"],
+                           "destino": ["C", "L"], "cod_ubicacion": ["U", "U"], "serie": ["No agrícola"] * 2, "semestre": ["2026-2S"] * 2})
+    monkeypatch.setattr(modapp.ter, "buscar", lambda cod, q: varios if cod == 15105 else varios.head(0))
+    vistos = []
+    monkeypatch.setattr(modapp.pi, "leer", lambda cands: vistos.append(cands))
+    c = TestClient(modapp.app)
+    r = c.post("/informe", data={"comuna": "Ñuñoa", "rol": "irarrazaval 366"})
+    assert r.status_code == 200 and "2 propiedad(es) coinciden" in r.text and 'name="rid" value="15105-2-3"' in r.text
+    c.post("/informe", data={"comuna": "Ñuñoa", "rol": "2-3", "rid": "15105-2-3"})
+    assert vistos[-1] == ["15105-2-3"]  # el rol completo elegido de la lista, sin pasar por el nombre de la comuna
+    monkeypatch.setattr(modapp.ter, "buscar", lambda cod, q: varios.head(1) if cod == 15105 else varios.head(0))
+    c.post("/informe", data={"comuna": "Ñuñoa", "rol": "irarrazaval 366 376"})
+    assert vistos[-1] == ["15105-2-3"]
