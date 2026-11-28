@@ -69,26 +69,32 @@ def resolver(rol: str, comuna: str | None) -> list[str]:
 
 
 def leer(rid_cands: list[str]) -> dict | None:
+    # Con varios candidatos (Santiago tiene 3 códigos SII) se elige UNO, el del semestre más reciente donde aparezca,
+    # para no mezclar datos de predios distintos entre semestres.
+    rid = None
+    for s in reversed(SEMESTRES):
+        x = pl.scan_parquet(STAGING / "catastro" / f"roles_{s}.parquet").filter(pl.col("rol_id").is_in(rid_cands)).select("rol_id").collect()
+        if x.height:
+            rid = sorted(x["rol_id"], key=rid_cands.index)[0]
+            break
+    if rid is None:
+        return None
     cat = {}
     for s in SEMESTRES:
-        f = STAGING / "catastro" / f"roles_{s}.parquet"
-        x = pl.scan_parquet(f).filter(pl.col("rol_id").is_in(rid_cands)).collect()
+        x = pl.scan_parquet(STAGING / "catastro" / f"roles_{s}.parquet").filter(pl.col("rol_id") == rid).collect()
         if x.height:
             cat[s] = x.row(0, named=True)
-    if not cat:
-        return None
-    rid = next(iter(cat.values()))["rol_id"]
     d = {"rol_id": rid, "cat": cat}
     d["comp"] = pl.scan_parquet(STAGING / "avaluo_componentes_2026_2.parquet").filter(pl.col("rol_id") == rid).collect()
     d["contrib"] = pl.scan_parquet(STAGING / "contribucion_2026_2.parquet").filter(pl.col("rol_id") == rid).collect()
-    d["r27"] = pl.scan_parquet(MARTS / "reavaluo2027_roles.parquet").filter(pl.col("rol_id") == rid).collect()
+    d["r27"] = leer_r27(rid, cat.get("2026_2"))
     d["linaje"] = pl.scan_parquet(STAGING / "map_rol_linaje.parquet").filter(pl.col("rol_id") == rid).collect()
     hoy = dt.date.today()
     t = pl.scan_parquet(STAGING / "f2890.parquet").filter(pl.col("rol_id") == rid).collect()
     valida = pl.col("fecha_escritura").dt.year().is_between(ANIO_MIN, hoy.year) & (pl.col("fecha_escritura") <= hoy)
     d["n_fechas_invalidas"] = t.filter(~valida).height
     t = t.filter(valida)
-    ft = pl.scan_parquet(STAGING / "fct_transferencia.parquet").filter(pl.col("rol_id") == rid).select("rol_id", "fecha_escritura", "n_roles_grupo", "tipo_grupo", "primera_venta_obra_nueva", "escritura_id").collect().unique(["fecha_escritura"])
+    ft = pl.scan_parquet(STAGING / "fct_transferencia.parquet").filter(pl.col("rol_id") == rid).select("rol_id", "fecha_escritura", "n_roles_grupo", "primera_venta_obra_nueva").collect().unique(["fecha_escritura"])
     d["transf"] = t.join(ft, on=["rol_id", "fecha_escritura"], how="left").sort("fecha_escritura")
     # Ventas del rol en el mart y lo típico de su microbarrio (precio ÷ avalúo, UF/m²) en ventas comparables
     v = pl.scan_parquet(MARTS / "fct_venta.parquet").filter(pl.col("rol_principal") == rid).collect()
@@ -101,6 +107,27 @@ def leer(rid_cands: list[str]) -> dict | None:
                .select("anio", "ratio_ia", "uf_m2").collect())
         d["ref_micro"] = ref
     return d
+
+
+def leer_r27(rid: str, ult: dict | None) -> pl.DataFrame:
+    """Fila del modelo 2027. En el paquete del servicio (src.titulos.empaquetar.compactar_reavaluo) el avalúo 2027
+    viene como factor por comuna y los roles siempre exentos no vienen: se reconstruyen aquí."""
+    r = pl.scan_parquet(MARTS / "reavaluo2027_roles.parquet").filter(pl.col("rol_id") == rid).collect()
+    fac_f = MARTS / "reavaluo2027_factores.parquet"
+    if not fac_f.exists() or ult is None:
+        return r
+    fac = pl.read_parquet(fac_f).filter(pl.col("cod_comuna") == ult["cod_comuna"])
+    if not fac.height:
+        return r
+    esc = ("S0", "S2", "S1")
+    if not r.height:
+        r = pl.DataFrame({"rol_id": [rid], **{c: [0] for c in ("contrib_teo", "contrib_27_S2", "d_27_S0", "d_27_S1", "sob_teo", "sob_27_S0", "sob_27_S2", "sob_27_S1")}})
+    r = r.with_columns(
+        (pl.col("contrib_teo") + pl.col("d_27_S0")).alias("contrib_27_S0"),
+        (pl.col("contrib_27_S2") + pl.col("d_27_S1")).alias("contrib_27_S1"),
+        (pl.col("contrib_teo") - pl.col("sob_teo")).alias("contrib_neta_teo"),
+    ).with_columns([(pl.col(f"contrib_27_{e}") - pl.col(f"sob_27_{e}")).alias(f"neta_27_{e}") for e in esc])
+    return r.with_columns([pl.lit(round(ult["avaluo_total"] * fac[f"factor_{e}"][0])).alias(f"avaluo_27_{e}") for e in esc])
 
 
 def tipico(ref: pl.DataFrame | None, anio: int, col: str) -> tuple[float | None, int]:
