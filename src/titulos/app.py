@@ -152,11 +152,11 @@ button{{margin-top:18px;font:inherit;font-weight:600;padding:10px 18px;border:0;
 <h1>Revisión de avalúo y contribuciones 2027</h1>
 <p class="caja">Para dueños: cuánto pagaría en 2027 en tres escenarios, si hay indicios de error técnico en su avalúo (superficie, clasificación o cálculo), ventas comparables y cómo reclamar.</p>
 {error}
-<form method="post" action="reclamo">
+<form method="post" action="reclamo" enctype="multipart/form-data">
 <label for="comuna">Comuna</label>
 <select id="comuna" name="comuna" required>{opciones}</select>
-<label for="rol">Rol <small>(manzana-predio, por ejemplo 152-779)</small></label>
-<input id="rol" name="rol" required pattern="\\d{{1,5}}-\\d{{1,5}}" inputmode="numeric" autocomplete="off">
+<label for="rol">Rol o dirección <small>(rol como manzana-predio, por ejemplo 152-779, o la dirección, por ejemplo «Irarrázaval 366»)</small></label>
+<input id="rol" name="rol" required maxlength="120" autocomplete="off">
 <button type="submit">Revisar avalúo</button>
 </form></body></html>"""
 
@@ -187,28 +187,9 @@ async def informe(request: Request, rol: str = Form(...), comuna: str = Form(...
         except SystemExit as e:
             return HTMLResponse(inicio(str(e)), status_code=400)
     else:
-        # Dirección → rol. Una dirección puede corresponder a varios roles (depto, bodega, estacionamiento): se elige de una lista.
-        cuts = pl.read_csv(REF / "comunas_cut.csv", separator=";")
-        cods = cuts.filter(pl.col("nombre_mapa") == comuna)["cod_comuna"].to_list()
-        res = [ter.buscar(c, rol) for c in cods]
-        res = pl.concat([x for x in res if x.height]) if any(x.height for x in res) else pl.DataFrame()
-        if res.height:
-            res = res.filter(pl.col("serie") == "No agrícola")  # el pre-informe usa la serie no agrícola
-        if not res.height:
-            return HTMLResponse(inicio(f"Sin resultados para «{rol}» en {comuna}. Pruebe con el nombre de la calle y el número, o con el rol."), status_code=404)
-        if res.height > 1:
-            filas = "".join(
-                f'<tr><td>{html.escape(r["direccion"] or "—")}</td><td>{html.escape(r["rol_id"])}</td><td>{html.escape(pi.DESTINOS.get(r["destino"], r["destino"] or "—"))}</td>'
-                f'<td><form class="inline" method="post" action="informe" enctype="multipart/form-data"><input type="hidden" name="comuna" value="{html.escape(comuna)}">'
-                f'<input type="hidden" name="rol" value="{html.escape(r["rol_id"].split("-", 1)[1])}"><input type="hidden" name="rid" value="{html.escape(r["rol_id"])}"><button>Generar pre-informe</button></form></td></tr>'
-                for r in res.head(ter.MAX_RESULTADOS).iter_rows(named=True))
-            aviso = "<p class='nota'>Los certificados no se trasladan a este paso (no se guardan): adjúntelos de nuevo con el rol elegido si los necesita.</p>" if any(a.filename for a in archivos) else ""
-            cuerpo = (f"<h1>Pre-informe de títulos</h1><h2>{res.height} propiedad(es) coinciden con «{html.escape(rol)}» en {html.escape(comuna)}</h2>"
-                      "<p class='nota'>Una misma dirección puede tener varios roles: el departamento, sus bodegas y estacionamientos, o varios lotes. Elija el que corresponde.</p>"
-                      f"{aviso}<table><thead><tr><th>Dirección</th><th>Rol</th><th>Destino</th><th></th></tr></thead><tbody>{filas}</tbody></table>"
-                      "<p><a href='./'>← Nueva búsqueda</a></p>")
-            return HTMLResponse(PAGINA.format(titulo="Pre-informe de títulos", cuerpo=cuerpo))
-        cands = [res["rol_id"][0]]
+        cands, resp = _por_direccion(rol, comuna, "informe", "Pre-informe de títulos", any(a.filename for a in archivos), inicio)
+        if resp is not None:
+            return resp
     d = pi.leer(cands)
     if d is None:
         return HTMLResponse(inicio(f"El rol {rol} de {comuna} no está en el catastro 2021–2026 del Gran Santiago."), status_code=404)
@@ -225,6 +206,36 @@ async def informe(request: Request, rol: str = Form(...), comuna: str = Form(...
     return HTMLResponse(cuerpo)
 
 
+def _por_direccion(rol: str, comuna: str, accion: str, titulo: str, con_archivos: bool, volver) -> tuple[list[str] | None, HTMLResponse | None]:
+    """Dirección → rol para los formularios por nombre de comuna (pre-informe y revisión de avalúo).
+
+    Una dirección puede corresponder a varios roles (depto, bodega, estacionamiento, lotes): con uno se sigue directo;
+    con varios se muestra la lista y cada botón envía el rol completo (rid), sin ambigüedad entre códigos de comuna."""
+    import polars as pl
+
+    cuts = pl.read_csv(REF / "comunas_cut.csv", separator=";")
+    cods = cuts.filter(pl.col("nombre_mapa") == comuna)["cod_comuna"].to_list()
+    res = [ter.buscar(c, rol) for c in cods]
+    res = pl.concat([x for x in res if x.height]) if any(x.height for x in res) else pl.DataFrame()
+    if res.height:
+        res = res.filter(pl.col("serie") == "No agrícola")  # estos informes usan la serie no agrícola
+    if not res.height:
+        return None, HTMLResponse(volver(f"Sin resultados para «{rol}» en {comuna}. Pruebe con el nombre de la calle y el número, o con el rol."), status_code=404)
+    if res.height == 1:
+        return [res["rol_id"][0]], None
+    filas = "".join(
+        f'<tr><td>{html.escape(r["direccion"] or "—")}</td><td>{html.escape(r["rol_id"])}</td><td>{html.escape(pi.DESTINOS.get(r["destino"], r["destino"] or "—"))}</td>'
+        f'<td><form class="inline" method="post" action="{accion}" enctype="multipart/form-data"><input type="hidden" name="comuna" value="{html.escape(comuna)}">'
+        f'<input type="hidden" name="rol" value="{html.escape(r["rol_id"].split("-", 1)[1])}"><input type="hidden" name="rid" value="{html.escape(r["rol_id"])}"><button>Elegir</button></form></td></tr>'
+        for r in res.head(ter.MAX_RESULTADOS).iter_rows(named=True))
+    aviso = "<p class='nota'>Los certificados no se trasladan a este paso (no se guardan): adjúntelos de nuevo con el rol elegido si los necesita.</p>" if con_archivos else ""
+    cuerpo = (f"<h1>{html.escape(titulo)}</h1><h2>{res.height} propiedad(es) coinciden con «{html.escape(rol)}» en {html.escape(comuna)}</h2>"
+              "<p class='nota'>Una misma dirección puede tener varios roles: el departamento, sus bodegas y estacionamientos, o varios lotes. Elija el que corresponde.</p>"
+              f"{aviso}<table><thead><tr><th>Dirección</th><th>Rol</th><th>Destino</th><th></th></tr></thead><tbody>{filas}</tbody></table>"
+              f"<p><a href='{'./' if accion == 'informe' else accion}'>← Nueva búsqueda</a></p>")
+    return None, HTMLResponse(PAGINA.format(titulo=titulo, cuerpo=cuerpo))
+
+
 @app.get("/reclamo", response_class=HTMLResponse, dependencies=[Depends(limitar)])
 def reclamo_inicio(error: str = "") -> str:
     ops = "".join(f"<option>{html.escape(c)}</option>" for c in comunas())
@@ -232,11 +243,21 @@ def reclamo_inicio(error: str = "") -> str:
 
 
 @app.post("/reclamo", response_class=HTMLResponse, dependencies=[Depends(limitar)])
-def reclamo(rol: str = Form(...), comuna: str = Form(...)) -> HTMLResponse:
-    try:
-        cands = pi.resolver(rol, comuna)
-    except SystemExit as e:
-        return HTMLResponse(reclamo_inicio(str(e)), status_code=400)
+def reclamo(rol: str = Form(...), comuna: str = Form(...), rid: str = Form("")) -> HTMLResponse:
+    import re
+
+    rol = rol.strip()[:120]
+    if re.fullmatch(r"\d{4,5}-\d{1,5}-\d{1,5}", rid.strip()):
+        cands = [rid.strip()]
+    elif re.fullmatch(r"\d{1,5}-\d{1,5}", rol):
+        try:
+            cands = pi.resolver(rol, comuna)
+        except SystemExit as e:
+            return HTMLResponse(reclamo_inicio(str(e)), status_code=400)
+    else:
+        cands, resp = _por_direccion(rol, comuna, "reclamo", "Revisión de avalúo y contribuciones 2027", False, reclamo_inicio)
+        if resp is not None:
+            return resp
     d = exp.leer(cands)
     if d is None:
         return HTMLResponse(reclamo_inicio(f"El rol {rol} de {comuna} no está en el catastro 2021–2026 del Gran Santiago."), status_code=404)
