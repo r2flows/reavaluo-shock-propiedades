@@ -77,7 +77,7 @@ def main() -> None:
         lf = pl.scan_parquet(src)
         if cols:
             lf = lf.select(cols)
-        if rel.startswith("staging/catastro/agricola_") and rel.endswith("2022_1.parquet"):
+        if (rel.startswith("staging/catastro/agricola_") and rel.endswith("2022_1.parquet")) or rel in ("staging/f2890.parquet", "staging/fct_transferencia.parquet"):
             lf = lf.filter((pl.col("cod_comuna") // 1000).is_between(13, 16))  # Región Metropolitana (códigos SII 13–16 mil)
         elif rel.startswith("staging/catastro/agricola_"):
             pass  # vigente: ya es solo el Gran Santiago descargado

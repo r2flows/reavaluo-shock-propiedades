@@ -49,7 +49,7 @@ def main() -> None:
         shutil.copy(REF / f, BUILD / "src" / "etl" / "ref" / f)
     for f in ("__init__.py", "app.py", "preinforme.py", "certificados.py"):
         shutil.copy(ROOT / "src" / "titulos" / f, BUILD / "src" / "titulos" / f)
-    for f in ("__init__.py", "auditoria_rol.py", "comparables.py", "estimador2027.py", "expediente.py", "terreno.py"):
+    for f in ("__init__.py", "auditoria_rol.py", "comparables.py", "estimador2027.py", "expediente.py", "terreno.py", "diligencia.py"):
         shutil.copy(ROOT / "src" / "producto" / f, BUILD / "src" / "producto" / f)
     shutil.copytree(datos, BUILD / "datos")
     (BUILD / "requirements.txt").write_text(REQ)

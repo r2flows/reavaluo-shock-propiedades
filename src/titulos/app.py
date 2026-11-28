@@ -27,6 +27,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from src.etl.common import REF
 from src.titulos import certificados as cert
 from src.producto import expediente as exp
+from src.producto import diligencia as dil
 from src.producto import terreno as ter
 from src.titulos import preinforme as pi
 
@@ -209,6 +210,7 @@ td.n,th.n{{text-align:right;font-variant-numeric:tabular-nums}}
 dl{{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;font-size:.9rem}} dt{{color:var(--ink2)}}
 .caja{{background:var(--soft);border:1px solid var(--rule);border-radius:8px;padding:10px 14px;font-size:.88rem;color:var(--ink2)}}
 .nota{{font-size:.82rem;color:var(--ink2)}} .err{{color:#b42318;font-weight:600}}
+.niv{{display:inline-block;color:#fff;font-size:.7rem;text-transform:uppercase;padding:1px 6px;border-radius:4px;margin-right:4px;white-space:nowrap}} ul.al li{{margin:.4em 0}}
 </style></head><body><p><a href="terreno">Nueva búsqueda de terreno</a> · <a href="reclamo">Revisión de avalúo 2027</a></p>{cuerpo}</body></html>"""
 
 
@@ -256,7 +258,7 @@ def terreno(cod: int = Form(...), q: str = Form(...)) -> HTMLResponse:
             campos = f'<input type="hidden" name="comuna" value="{html.escape(cut[0])}"><input type="hidden" name="rol" value="{int(m)}-{int(p)}">'
             extra = (f'<h2>Más sobre este rol</h2><form class="inline" method="post" action="informe">{campos}<button>Pre-informe de títulos (con clave)</button></form> '
                      f'<form class="inline" method="post" action="reclamo">{campos}<button>Revisión de avalúo 2027</button></form>')
-        return HTMLResponse(PAGINA.format(titulo=f"Terreno · rol {d['rol_id']}", cuerpo=ter.html_ficha(d, nombres[cod]) + extra))
+        return HTMLResponse(PAGINA.format(titulo=f"Terreno · rol {d['rol_id']}", cuerpo=ter.html_ficha(d, nombres[cod]) + dil.html_seccion(dil.evaluar(dil.cargar(d))) + extra))
     res = ter.buscar(cod, q)
     if not res.height:
         return HTMLResponse(PAGINA.format(titulo="Ficha de terreno", cuerpo=_form_terreno(f"Sin resultados para «{q}» en {nombres[cod]}. Pruebe con menos palabras o solo el nombre de la calle y el número.", cod, q)), status_code=404)
