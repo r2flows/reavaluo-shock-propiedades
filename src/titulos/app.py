@@ -1,8 +1,9 @@
 """Servicio de pre-informes de títulos (FastAPI).
 
-Acceso (decisión del usuario, 28-11-2026): /terreno y /reclamo son abiertos, con un límite de consultas por IP para
-impedir la extracción masiva. El pre-informe de títulos (/ y /informe), que lee certificados del Conservador con
-datos de dueños, sigue con clave (CLAUDE.md).
+Acceso (decisión del usuario, 28-11-2026): todas las rutas son abiertas, con un límite de consultas por IP para impedir
+la extracción masiva (60 cada 10 minutos) y uno más estricto para la lectura de certificados (20 cada 10 minutos).
+Los certificados del Conservador que sube el usuario se siguen procesando solo en memoria (CLAUDE.md). Las credenciales
+PREINFORME_* y `autenticar` se conservan para volver a cerrar una ruta si hace falta.
 
 Variables de entorno:
   PREINFORME_USUARIO, PREINFORME_CLAVE   credenciales de acceso (HTTP Basic sobre HTTPS). Sin ellas el servicio no parte.
@@ -60,6 +61,21 @@ def limitar(req: Request) -> None:
     q.append(ahora)
     if len(CONSULTAS) > 50_000:  # evita que el diccionario crezca sin límite
         CONSULTAS.clear()
+
+
+SUBIDAS: dict[str, deque] = defaultdict(deque)
+MAX_SUBIDAS = 20  # lecturas de certificados cada 10 minutos por IP (leer PDF es lo más caro del servicio)
+
+
+def limitar_subidas(req: Request) -> None:
+    q, ahora = SUBIDAS[ip(req)], time.time()
+    while q and ahora - q[0] > VENTANA_PUBLICA:
+        q.popleft()
+    if len(q) >= MAX_SUBIDAS:
+        raise HTTPException(429, "Demasiadas lecturas de certificados; espere unos minutos.")
+    q.append(ahora)
+    if len(SUBIDAS) > 50_000:
+        SUBIDAS.clear()
 
 
 def autenticar(req: Request, cred: HTTPBasicCredentials = Depends(basic)) -> None:
@@ -149,14 +165,14 @@ def salud() -> str:
     return "ok"
 
 
-@app.get("/", response_class=HTMLResponse, dependencies=[Depends(autenticar)])
+@app.get("/", response_class=HTMLResponse, dependencies=[Depends(limitar)])
 def inicio(error: str = "") -> str:
     ops = "".join(f"<option>{html.escape(c)}</option>" for c in comunas())
     return FORM.format(opciones=ops, error=f'<p class="err">{html.escape(error)}</p>' if error else "")
 
 
-@app.post("/informe", response_class=HTMLResponse, dependencies=[Depends(autenticar)])
-async def informe(rol: str = Form(...), comuna: str = Form(...), archivos: list[UploadFile] = File(default=[])) -> HTMLResponse:
+@app.post("/informe", response_class=HTMLResponse, dependencies=[Depends(limitar)])
+async def informe(request: Request, rol: str = Form(...), comuna: str = Form(...), archivos: list[UploadFile] = File(default=[])) -> HTMLResponse:
     try:
         cands = pi.resolver(rol, comuna)
     except SystemExit as e:
@@ -167,6 +183,7 @@ async def informe(rol: str = Form(...), comuna: str = Form(...), archivos: list[
     extra = ""
     subidos = [a for a in archivos if a.filename][: cert.MAX_ARCHIVOS]
     if subidos:
+        limitar_subidas(request)
         datos = [(a.filename, await a.read(cert.MAX_BYTES + 1)) for a in subidos]
         lecturas = cert.leer_archivos(datos)
         del datos
@@ -256,7 +273,7 @@ def terreno(cod: int = Form(...), q: str = Form(...)) -> HTMLResponse:
             cut = []  # Santiago tiene 3 códigos SII: el formulario por nombre de comuna podría abrir otro rol
         if cut and d["semestre"] == "2026-2S":
             campos = f'<input type="hidden" name="comuna" value="{html.escape(cut[0])}"><input type="hidden" name="rol" value="{int(m)}-{int(p)}">'
-            extra = (f'<h2>Más sobre este rol</h2><form class="inline" method="post" action="informe">{campos}<button>Pre-informe de títulos (con clave)</button></form> '
+            extra = (f'<h2>Más sobre este rol</h2><form class="inline" method="post" action="informe">{campos}<button>Pre-informe de títulos</button></form> '
                      f'<form class="inline" method="post" action="reclamo">{campos}<button>Revisión de avalúo 2027</button></form>')
         return HTMLResponse(PAGINA.format(titulo=f"Terreno · rol {d['rol_id']}", cuerpo=ter.html_ficha(d, nombres[cod]) + dil.html_seccion(dil.evaluar(dil.cargar(d))) + extra))
     res = ter.buscar(cod, q)

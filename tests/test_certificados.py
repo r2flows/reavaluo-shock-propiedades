@@ -63,7 +63,7 @@ def test_pdf_sin_texto_y_tamano():
     assert not out[0].con_texto and not out[1].con_texto
 
 
-def test_servicio_exige_clave(monkeypatch):
+def test_servicio_abierto_cabeceras(monkeypatch):
     pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient
 
@@ -76,18 +76,11 @@ def test_servicio_exige_clave(monkeypatch):
     importlib.reload(modapp)
     c = TestClient(modapp.app)
     assert c.get("/salud").text == "ok"
-    r = c.get("/")
-    assert r.status_code == 401
-    r = c.get("/", auth=("prueba", "mala"))
-    assert r.status_code == 401
-    r = c.get("/", auth=("prueba", "clave-de-prueba-larga-123"))
+    r = c.get("/")  # abierto desde el 28-11-2026
     assert r.status_code == 200 and "Pre-informe" in r.text
     assert r.headers["cache-control"] == "no-store" and "noindex" in r.headers["x-robots-tag"]
-    r = c.post("/informe", auth=("prueba", "clave-de-prueba-larga-123"), data={"rol": "abc", "comuna": "Santiago"})
+    r = c.post("/informe", data={"rol": "abc", "comuna": "Santiago"})
     assert r.status_code == 400
-    for _ in range(12):
-        c.get("/", auth=("prueba", "mala"))
-    assert c.get("/", auth=("prueba", "clave-de-prueba-larga-123")).status_code == 429
 
 
 def test_rutas_abiertas_con_limite(monkeypatch):
@@ -104,7 +97,6 @@ def test_rutas_abiertas_con_limite(monkeypatch):
     c = TestClient(modapp.app)
     r = c.get("/reclamo")  # abierta: sin clave
     assert r.status_code == 200 and "Revisión de avalúo" in r.text
-    assert c.post("/informe", data={"rol": "1-1", "comuna": "Santiago"}).status_code == 401  # títulos sigue con clave
     for _ in range(modapp.MAX_CONSULTAS - 1):
         c.get("/reclamo")
     assert c.get("/reclamo").status_code == 429

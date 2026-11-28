@@ -103,3 +103,10 @@ Fuentes:
 - Cuatrecasas: https://www.cuatrecasas.com/es/latam/publico/art/ley-21-772-reforma-sistema-registral-notarial
 - ChileAtiende, carpeta de estudio de títulos: https://www.chileatiende.gob.cl/fichas/30436-carpeta-de-estudio-de-titulos-de-hasta-10-anos
 - ChileAtiende, certificado GP: https://www.chileatiende.gob.cl/fichas/457-certificado-de-los-registros-de-hipotecas-gravamenes-y-prohibiciones-de-una-propiedad-gp
+
+## 6. Acceso abierto (28-11-2026)
+A pedido del usuario, el servicio quedó **sin clave** en todas sus rutas: pre-informe de títulos, lector de certificados, ficha de terreno y revisión de avalúo.
+- Se mantiene la regla de fondo: los certificados que sube el usuario se procesan en memoria, se muestran y se descartan. No se guardan ni se registran.
+- Límites por IP: 60 consultas cada 10 minutos y 20 lecturas de certificados cada 10 minutos.
+- Riesgo asumido: cualquiera puede consultar el pre-informe de cualquier rol. El pre-informe no trae datos personales, porque el catastro y el F2890 no tienen nombres. Los nombres solo aparecen si el propio usuario sube un certificado, y solo se le muestran a él.
+- Para volver a cerrar una ruta, se cambia `Depends(limitar)` por `Depends(autenticar)` en `src/titulos/app.py`.
